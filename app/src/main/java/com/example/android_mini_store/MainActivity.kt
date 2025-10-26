@@ -1,18 +1,14 @@
 package com.example.android_mini_store
 
-import android.Manifest
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.example.android_mini_store.ui.theme.Android_mini_storeTheme
 import androidx.compose.material3.Button
@@ -45,6 +41,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.android_mini_store.ui.theme.login.LoginScreen
 import com.example.android_mini_store.ui.theme.singIn.newUserScreen
+
+// IMPORT AGREGADO: Nueva pantalla de productos
 import com.example.android_mini_store.ui.theme.productos.ProductosScreen
 
 //import pantalla de carga
@@ -54,27 +52,13 @@ import kotlinx.coroutines.delay
 //rutas
 sealed class Screen(val route: String) {
     object Main : Screen("main")
-    object Products : Screen("products") // RUTA AGREGADA: Para la pantalla de productos
+    object Products : Screen("products")
     object Login : Screen("login")
     object NewUser : Screen("newUser")
     object Loading : Screen("loading")
 }
 
 class MainActivity : ComponentActivity() {
-    // Registro para solicitar permisos de ubicación
-    private val locationPermissionRequest = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-        val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
-
-        // Actualizar el estado de permisos
-        locationPermissionsGranted = fineLocationGranted || coarseLocationGranted
-    }
-
-    // Variable para almacenar el estado de permisos
-    private var locationPermissionsGranted = false
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -90,19 +74,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    // Función para solicitar permisos de ubicación
-    fun requestLocationPermissions() {
-        locationPermissionRequest.launch(arrayOf(
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ))
-    }
-
-    // Función para verificar si los permisos están concedidos
-    fun areLocationPermissionsGranted(): Boolean {
-        return locationPermissionsGranted
     }
 }
 

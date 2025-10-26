@@ -1,11 +1,10 @@
 package com.example.android_mini_store.ui.theme.productos
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+import com.example.android_mini_store.R
 
 class ProductosViewModel : ViewModel() {
 
@@ -13,24 +12,11 @@ class ProductosViewModel : ViewModel() {
     private val _tiendaSeleccionada = MutableStateFlow("Tienda 1")
     val tiendaSeleccionada: StateFlow<String> = _tiendaSeleccionada.asStateFlow()
 
-    // Estado para la ubicación
-    private val _ubicacion = MutableStateFlow("")
-    val ubicacion: StateFlow<String> = _ubicacion.asStateFlow()
-
-    // Estado para permisos de ubicación
-    private val _permisosUbicacion = MutableStateFlow(false)
-    val permisosUbicacion: StateFlow<Boolean> = _permisosUbicacion.asStateFlow()
-
-    // Estado para mostrar mensaje de ubicación
-    private val _mostrarUbicacion = MutableStateFlow(false)
-    val mostrarUbicacion: StateFlow<Boolean> = _mostrarUbicacion.asStateFlow()
-
-    // Lista de productos de ejemplo
+    // Lista de productos de ejemplo CON IMÁGENES
     private val _productos = MutableStateFlow<List<Producto>>(emptyList())
     val productos: StateFlow<List<Producto>> = _productos.asStateFlow()
 
     init {
-        // Inicializar con productos de ejemplo
         cargarProductosEjemplo()
     }
 
@@ -39,65 +25,49 @@ class ProductosViewModel : ViewModel() {
         _tiendaSeleccionada.value = nuevaTienda
     }
 
-    // Función para actualizar la ubicación
-    fun actualizarUbicacion(nuevaUbicacion: String) {
-        _ubicacion.value = nuevaUbicacion
-        _mostrarUbicacion.value = true
-    }
-
-    // Función para actualizar estado de permisos
-    fun actualizarPermisos(concedidos: Boolean) {
-        _permisosUbicacion.value = concedidos
-    }
-
-    // Función para ocultar el mensaje de ubicación
-    fun ocultarUbicacion() {
-        _mostrarUbicacion.value = false
-    }
-
-    // Cargar productos de ejemplo
+    // Cargar productos de ejemplo CON REFERENCIAS A DRAWABLE
     private fun cargarProductosEjemplo() {
         val productosEjemplo = listOf(
             Producto(
                 id = 1,
-                nombre = "Arroz Integral",
-                precio = 2.50,
-                imagenUrl = "",
+                nombre = "Arroz Extra",
+                precio = 3.20,
+                imagenResId = R.drawable.aceite_coliseo,
                 descuento = "10%"
             ),
             Producto(
                 id = 2,
-                nombre = "Aceite de Oliva",
-                precio = 5.99,
-                imagenUrl = "",
+                nombre = "Aceite Vegetal",
+                precio = 8.50,
+                imagenResId = R.drawable.aceite, // Referencia al drawable
                 descuento = "15%"
             ),
             Producto(
                 id = 3,
-                nombre = "Leche Deslactosada",
-                precio = 1.80,
-                imagenUrl = "",
+                nombre = "Leche Entera",
+                precio = 4.80,
+                imagenResId = R.drawable.leche, // Referencia al drawable
                 descuento = "5%"
             ),
             Producto(
                 id = 4,
-                nombre = "Pasta Integral",
-                precio = 1.20,
-                imagenUrl = "",
+                nombre = "Fideos Tallarín",
+                precio = 2.10,
+                imagenResId = R.drawable.fideos, // Referencia al drawable
                 descuento = "20%"
             ),
             Producto(
                 id = 5,
                 nombre = "Atún en Lata",
-                precio = 3.25,
-                imagenUrl = "",
+                precio = 6.25,
+                imagenResId = R.drawable.atun, // Referencia al drawable
                 descuento = "12%"
             ),
             Producto(
                 id = 6,
-                nombre = "Galletas Integrales",
-                precio = 2.10,
-                imagenUrl = "",
+                nombre = "Galletas Soda",
+                precio = 3.10,
+                imagenResId = R.drawable.galletas, // Referencia al drawable
                 descuento = "8%"
             )
         )
@@ -105,11 +75,11 @@ class ProductosViewModel : ViewModel() {
     }
 }
 
-// Data class para productos
+// Data class para productos CON resource ID
 data class Producto(
     val id: Int,
     val nombre: String,
     val precio: Double,
-    val imagenUrl: String,
+    val imagenResId: Int, // Int para resource ID de drawable
     val descuento: String
 )
