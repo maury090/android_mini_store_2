@@ -37,7 +37,7 @@ import kotlinx.coroutines.delay
 fun LoginScreen(navController: NavHostController) {
     val viewModel: LoginViewModel = viewModel()
 
-    // Convertir StateFlow a State de Compose usando collectAsState()
+
     val showSnackbar by viewModel.showSnackbar.collectAsState()
 
     // Ocultar automáticamente el Snackbar después de 3 segundos
@@ -52,13 +52,13 @@ fun LoginScreen(navController: NavHostController) {
         Box(modifier = Modifier.fillMaxSize()) {
             LoginContent(navController, viewModel)
 
-            // Snackbar en la PARTE SUPERIOR - MODIFICADO
+            // Snackbar en la PARTE SUPERIOR
             if (showSnackbar) {
                 Snackbar(
                     modifier = Modifier
-                        .align(Alignment.TopCenter) // Cambiado a TopCenter
+                        .align(Alignment.TopCenter)
                         .padding(16.dp)
-                        .statusBarsPadding(), // Respeta la barra de estado
+                        .statusBarsPadding(),
                     action = {
                         TextButton(
                             onClick = { viewModel.hideSnackbar() }
@@ -82,7 +82,7 @@ fun LoginScreen(navController: NavHostController) {
 
 @Composable
 fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
-    // Convertir StateFlow a State de Compose usando collectAsState()
+
     val email by viewModel.email.collectAsState()
     val password by viewModel.password.collectAsState()
 
@@ -93,7 +93,7 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Título - CON COLOR DEL TEMA
+
         Text(
             text = "Iniciar Sesión",
             style = MaterialTheme.typography.headlineMedium,
@@ -142,7 +142,7 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
                 .padding(bottom = 32.dp)
         )
 
-        // Botones (65%)
+        // Botones
         Column(
             modifier = Modifier
                 .fillMaxWidth(0.65f)
@@ -150,7 +150,7 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Botón de Ingresar - SOLO muestra Snackbar si campos vacíos
+            // Botón de Ingresar
             Button(
                 onClick = {
                     viewModel.onLoginClick()

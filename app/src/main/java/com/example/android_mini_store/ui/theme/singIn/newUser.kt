@@ -65,7 +65,7 @@ fun SignInContent(navController: NavHostController) {
             modifier = Modifier.padding(bottom = 18.dp)
         )
 
-        // CAMPO NOMBRE CON VALIDACIÓN CORREGIDA
+        // CAMPO NOMBRE
         OutlinedTextField(
             value = nombre,
             onValueChange = {
@@ -85,18 +85,17 @@ fun SignInContent(navController: NavHostController) {
                 focusedTextColor = Color.Black,
                 unfocusedTextColor = Color.Black,
                 errorTextColor = Color.Black,
-                // BORDES SIEMPRE GRISES
+
                 focusedBorderColor = Color.Gray,
                 unfocusedBorderColor = Color.Gray,
                 errorBorderColor = Color.Gray
             ),
-            // ✅ CORREGIDO: Usar isValid directamente
+
             isError = nombreError.isNotEmpty() && !isValidNombre(nombre).isValid,
             supportingText = {
                 if (nombreError.isNotEmpty()) {
                     Text(
                         text = nombreError,
-                        // ✅ CORREGIDO: Color basado en isValid
                         color = if (isValidNombre(nombre).isValid) Color(0xFF4CAF50) else Color.Red
                     )
                 }
@@ -106,7 +105,7 @@ fun SignInContent(navController: NavHostController) {
                 .padding(bottom = 8.dp)
         )
 
-        // CAMPO APELLIDO CON VALIDACIÓN CORREGIDA
+        // CAMPO APELLIDO
         OutlinedTextField(
             value = apellido,
             onValueChange = {
@@ -130,7 +129,7 @@ fun SignInContent(navController: NavHostController) {
                 unfocusedBorderColor = Color.Gray,
                 errorBorderColor = Color.Gray
             ),
-            // ✅ CORREGIDO: Usar isValid directamente
+
             isError = apellidoError.isNotEmpty() && !isValidApellido(apellido).isValid,
             supportingText = {
                 if (apellidoError.isNotEmpty()) {
@@ -145,7 +144,7 @@ fun SignInContent(navController: NavHostController) {
                 .padding(bottom = 8.dp)
         )
 
-        // CAMPO EMAIL CON VALIDACIÓN CORREGIDA
+        // CAMPO EMAIL
         OutlinedTextField(
             value = email,
             onValueChange = {
@@ -169,7 +168,7 @@ fun SignInContent(navController: NavHostController) {
                 unfocusedBorderColor = Color.Gray,
                 errorBorderColor = Color.Gray
             ),
-            // ✅ CORREGIDO: Usar isValid directamente
+
             isError = emailError.isNotEmpty() && !isValidEmail(email).isValid,
             supportingText = {
                 if (emailError.isNotEmpty()) {
@@ -184,7 +183,7 @@ fun SignInContent(navController: NavHostController) {
                 .padding(bottom = 8.dp)
         )
 
-        // CAMPO DIRECCIÓN CON VALIDACIÓN CORREGIDA
+
         OutlinedTextField(
             value = direccion,
             onValueChange = {
@@ -208,13 +207,13 @@ fun SignInContent(navController: NavHostController) {
                 unfocusedBorderColor = Color.Gray,
                 errorBorderColor = Color.Gray
             ),
-            // ✅ CORREGIDO: Usar isValid directamente
+
             isError = direccionError.isNotEmpty() && !isValidDireccion(direccion).isValid,
             supportingText = {
                 if (direccionError.isNotEmpty()) {
                     Text(
                         text = direccionError,
-                        // ✅ AHORA MOSTRARÁ VERDE CUANDO SEA VÁLIDO
+
                         color = if (isValidDireccion(direccion).isValid) Color(0xFF4CAF50) else Color.Red
                     )
                 }
@@ -228,7 +227,7 @@ fun SignInContent(navController: NavHostController) {
         OutlinedTextField(
             value = rut,
             onValueChange = { nuevoValor ->
-                // PERMITIR SOLO NÚMEROS Y K (sin formato automático)
+
                 val textoFiltrado = nuevoValor.filter {
                     it.isDigit() || it == 'K' || it == 'k'
                 }.uppercase()
@@ -253,7 +252,7 @@ fun SignInContent(navController: NavHostController) {
                 unfocusedBorderColor = Color.Gray,
                 errorBorderColor = Color.Gray
             ),
-            // ✅ CORREGIDO: Usar isValid directamente
+
             isError = rutError.isNotEmpty() && !isValidRUT(rut).isValid,
             supportingText = {
                 if (rutError.isNotEmpty()) {
@@ -282,7 +281,7 @@ fun SignInContent(navController: NavHostController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // BOTÓN REGISTRATE CON VALIDACIÓN
+
             Button(
                 onClick = {},
                 modifier = Modifier
