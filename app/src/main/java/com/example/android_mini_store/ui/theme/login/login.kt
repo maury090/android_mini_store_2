@@ -152,9 +152,7 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
         ) {
             // Botón de Ingresar
             Button(
-                onClick = {
-                    viewModel.onLoginClick()
-                },
+                onClick = {},
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
@@ -182,7 +180,7 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
 
             // Botón Volver al Inicio
             Button(
-                onClick = { navController.popBackStack() },
+                onClick = {navController.navigate(Screen.Main.route)},
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Red,
                     contentColor = Color.White

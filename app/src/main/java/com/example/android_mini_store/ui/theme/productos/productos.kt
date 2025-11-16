@@ -49,6 +49,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.android_mini_store.R
+import androidx.navigation.NavHostController
+import com.example.android_mini_store.Screen
 
 // Data class para los productos
 data class Producto(
@@ -60,10 +62,8 @@ data class Producto(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductosScreen(
-    onNavigateToMain: () -> Unit = {},
-    onNavigateToPage2: () -> Unit = {}
-) {
+fun ProductosScreen(navController: NavHostController)
+{
     var menuExpanded by remember { mutableStateOf(false) }
     var tiendaExpanded by remember { mutableStateOf(false) }
     var tiendaSeleccionada by remember { mutableStateOf("Tiendas...") }
@@ -144,29 +144,35 @@ fun ProductosScreen(
                         ) {
                             androidx.compose.material3.DropdownMenuItem(
                                 text = {
-                                    Text("Opción 1", color = Color(0xFFFBE10E))
+                                    Text("Bebestibles", color = Color(0xFFFBE10E))
                                 },
-                                onClick = {
-                                    menuExpanded = false
-                                    Toast.makeText(context, "Opción 1 seleccionada", Toast.LENGTH_SHORT).show()
-                                }
+                                onClick = {}
                             )
                             androidx.compose.material3.DropdownMenuItem(
                                 text = {
-                                    Text("Opción 2", color = Color(0xFFFBE10E))
+                                    Text("Aseo y cuidado personal", color = Color(0xFFFBE10E))
                                 },
-                                onClick = {
-                                    menuExpanded = false
-                                    Toast.makeText(context, "Opción 2 seleccionada", Toast.LENGTH_SHORT).show()
-                                }
+                                onClick = {}
                             )
                             androidx.compose.material3.DropdownMenuItem(
                                 text = {
-                                    Text("Opción 3", color = Color(0xFFFBE10E))
+                                    Text("Abarrotes", color = Color(0xFFFBE10E))
+                                },
+                                onClick = {}
+                            )
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = {
+                                    Text("Articulos de hogar", color = Color(0xFFFBE10E))
+                                },
+                                onClick = {}
+                            )
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = {
+                                    Text("Iniciar Sesion", color = Color(0xFFFBE10E))
                                 },
                                 onClick = {
                                     menuExpanded = false
-                                    Toast.makeText(context, "Opción 3 seleccionada", Toast.LENGTH_SHORT).show()
+                                    navController.navigate("login")
                                 }
                             )
                         }
@@ -175,7 +181,7 @@ fun ProductosScreen(
                     Spacer(modifier = Modifier.weight(1f))
 
                     Text(
-                        text = "PRODUCTOS",
+                        text = "Productos de la semana",
                         color = Color(0xFFFBE10E),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
@@ -250,32 +256,32 @@ fun ProductosScreen(
                         ) {
                             androidx.compose.material3.DropdownMenuItem(
                                 text = {
-                                    Text("Tienda 1", color = Color.Black)
+                                    Text("Av Alvarez 2290, Viña del Mar", color = Color.Black)
                                 },
                                 onClick = {
-                                    tiendaSeleccionada = "Tienda 1"
+                                    tiendaSeleccionada = "Tienda Viña del Mar"
                                     tiendaExpanded = false
-                                    Toast.makeText(context, "Tienda 1 seleccionada", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Tienda Viña del Mar seleccionada", Toast.LENGTH_SHORT).show()
                                 }
                             )
                             androidx.compose.material3.DropdownMenuItem(
                                 text = {
-                                    Text("Tienda 2", color = Color.Black)
+                                    Text("Almte. Latorre 437, La Calera", color = Color.Black)
                                 },
                                 onClick = {
-                                    tiendaSeleccionada = "Tienda 2"
+                                    tiendaSeleccionada = "Tienda La Calera"
                                     tiendaExpanded = false
-                                    Toast.makeText(context, "Tienda 2 seleccionada", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Tienda La Calera seleccionada", Toast.LENGTH_SHORT).show()
                                 }
                             )
                             androidx.compose.material3.DropdownMenuItem(
                                 text = {
-                                    Text("Tienda 3", color = Color.Black)
+                                    Text("Los Ceramistas 8633, La Reina", color = Color.Black)
                                 },
                                 onClick = {
-                                    tiendaSeleccionada = "Tienda 3"
+                                    tiendaSeleccionada = "Tienda La Reina"
                                     tiendaExpanded = false
-                                    Toast.makeText(context, "Tienda 3 seleccionada", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Tienda La Reina seleccionada", Toast.LENGTH_SHORT).show()
                                 }
                             )
                         }
@@ -421,7 +427,7 @@ fun ProductosScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Button(
-                    onClick = {},
+                    onClick = {navController.navigate(Screen.Main.route)},
                     modifier = Modifier
                         .fillMaxWidth(0.5f)
                         .height(45.dp),

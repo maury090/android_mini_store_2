@@ -34,6 +34,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.background
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 //import necesario para la navegacion entre vistas
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -41,13 +45,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.android_mini_store.ui.theme.login.LoginScreen
 import com.example.android_mini_store.ui.theme.singIn.newUserScreen
-
-// IMPORT AGREGADO: Nueva pantalla de productos
 import com.example.android_mini_store.ui.theme.productos.ProductosScreen
 
 //import pantalla de carga
 import androidx.compose.material3.CircularProgressIndicator
 import kotlinx.coroutines.delay
+
+//import dialog para cierre de app
+import androidx.compose.material3.AlertDialog
+import androidx.compose.ui.platform.LocalContext
+import android.app.Activity
 
 //rutas
 sealed class Screen(val route: String) {
@@ -97,9 +104,9 @@ fun AppNavigation() {
         composable(Screen.NewUser.route) {
             newUserScreen(navController = navController)
         }
-        // NUEVA PANTALLA AGREGADA: Pantalla de productos
+
         composable(Screen.Products.route) {
-            ProductosScreen()
+            ProductosScreen(navController = navController)
         }
     }
 }
@@ -189,12 +196,45 @@ fun MainScreenWithWelcome(navController: NavHostController) {
 
 @Composable
 fun ButtonsVertical(navController: NavHostController) {
+
+    //funcion para mensaje de confirmacion de cierre app
+    val context = LocalContext.current
+    var showExitDialog by remember { mutableStateOf(false) }
+
+    if (showExitDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitDialog = false },
+            title = { Text("Salir de la aplicación") },
+            text = { Text("¿Estás seguro de que quieres salir de EKONO?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showExitDialog = false
+                        // ✅ NUEVO: Cierra la aplicación
+                        (context as? Activity)?.finishAffinity()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("Sí, salir")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { showExitDialog = false }
+                ) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // BOTÓN MODIFICADO: Ahora navega a la pantalla de productos
+        //navega a la pantalla de productos
         Button(
             onClick = {
                 navController.navigate(Screen.Products.route)
@@ -236,7 +276,7 @@ fun ButtonsVertical(navController: NavHostController) {
         }
 
         Button(
-            onClick = { },
+            onClick = { showExitDialog = true},
             modifier = Modifier
                 .fillMaxWidth(0.7f),
             colors = ButtonDefaults.buttonColors(
@@ -254,7 +294,7 @@ fun ButtonsVertical(navController: NavHostController) {
 fun LoadingScreen(navController: NavHostController) {
     // temporizador
     LaunchedEffect(Unit) {
-        delay(1000) // tiempo establecido de pantalla de carga
+        delay(1000) 
         navController.navigate(Screen.Login.route) {
             popUpTo(Screen.Loading.route) { inclusive = true }
         }
