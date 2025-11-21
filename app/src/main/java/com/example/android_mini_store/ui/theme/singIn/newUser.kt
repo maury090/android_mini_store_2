@@ -2,13 +2,18 @@ package com.example.android_mini_store.ui.theme.singIn
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -50,7 +55,6 @@ fun SignInContent(navController: NavHostController) {
     var rutError by remember { mutableStateOf("") }
     var direccionError by remember { mutableStateOf("") }
 
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -85,12 +89,10 @@ fun SignInContent(navController: NavHostController) {
                 focusedTextColor = Color.Black,
                 unfocusedTextColor = Color.Black,
                 errorTextColor = Color.Black,
-
                 focusedBorderColor = Color.Gray,
                 unfocusedBorderColor = Color.Gray,
                 errorBorderColor = Color.Gray
             ),
-
             isError = nombreError.isNotEmpty() && !isValidNombre(nombre).isValid,
             supportingText = {
                 if (nombreError.isNotEmpty()) {
@@ -129,7 +131,6 @@ fun SignInContent(navController: NavHostController) {
                 unfocusedBorderColor = Color.Gray,
                 errorBorderColor = Color.Gray
             ),
-
             isError = apellidoError.isNotEmpty() && !isValidApellido(apellido).isValid,
             supportingText = {
                 if (apellidoError.isNotEmpty()) {
@@ -168,7 +169,6 @@ fun SignInContent(navController: NavHostController) {
                 unfocusedBorderColor = Color.Gray,
                 errorBorderColor = Color.Gray
             ),
-
             isError = emailError.isNotEmpty() && !isValidEmail(email).isValid,
             supportingText = {
                 if (emailError.isNotEmpty()) {
@@ -183,7 +183,7 @@ fun SignInContent(navController: NavHostController) {
                 .padding(bottom = 8.dp)
         )
 
-
+        // CAMPO DIRECCIÓN
         OutlinedTextField(
             value = direccion,
             onValueChange = {
@@ -207,13 +207,11 @@ fun SignInContent(navController: NavHostController) {
                 unfocusedBorderColor = Color.Gray,
                 errorBorderColor = Color.Gray
             ),
-
             isError = direccionError.isNotEmpty() && !isValidDireccion(direccion).isValid,
             supportingText = {
                 if (direccionError.isNotEmpty()) {
                     Text(
                         text = direccionError,
-
                         color = if (isValidDireccion(direccion).isValid) Color(0xFF4CAF50) else Color.Red
                     )
                 }
@@ -223,11 +221,10 @@ fun SignInContent(navController: NavHostController) {
                 .padding(bottom = 8.dp)
         )
 
-        // ✅ CAMPO RUT CON NUEVA VALIDACIÓN DE LONGITUD
+        // CAMPO RUT
         OutlinedTextField(
             value = rut,
             onValueChange = { nuevoValor ->
-
                 val textoFiltrado = nuevoValor.filter {
                     it.isDigit() || it == 'K' || it == 'k'
                 }.uppercase()
@@ -252,7 +249,6 @@ fun SignInContent(navController: NavHostController) {
                 unfocusedBorderColor = Color.Gray,
                 errorBorderColor = Color.Gray
             ),
-
             isError = rutError.isNotEmpty() && !isValidRUT(rut).isValid,
             supportingText = {
                 if (rutError.isNotEmpty()) {
@@ -262,8 +258,7 @@ fun SignInContent(navController: NavHostController) {
                     )
                 } else {
                     Text(
-                        // ✅ NUEVO MENSAJE INFORMATIVO SOBRE LA LONGITUD
-                        text = "RUT entre 8-9 dígitos. Ej: 12345678 (8) o 123456789 (9)",
+                        text = "RUT entre 8-9 dígitos. Ej: 12345678 o 123456789",
                         color = Color.Gray,
                         fontSize = 12.sp
                     )
@@ -274,6 +269,9 @@ fun SignInContent(navController: NavHostController) {
                 .padding(bottom = 16.dp)
         )
 
+        // -------------------------------
+        // BOTONES CON ICONOS
+        // -------------------------------
         Column(
             modifier = Modifier
                 .fillMaxWidth(0.65f)
@@ -282,8 +280,9 @@ fun SignInContent(navController: NavHostController) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
+            // BOTÓN REGISTRARSE (Done)
             Button(
-                onClick = {},
+                onClick = { },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
@@ -292,9 +291,19 @@ fun SignInContent(navController: NavHostController) {
                     contentColor = Color.White
                 ),
             ) {
-                Text("Registrate")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.Done,
+                        contentDescription = "Icono registrar"
+                    )
+                    Text(
+                        text = "Registrarse",
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
             }
 
+            // BOTÓN VOLVER (ArrowBack)
             Button(
                 onClick = {
                     navController.popBackStack()
@@ -307,7 +316,16 @@ fun SignInContent(navController: NavHostController) {
                     .fillMaxWidth()
                     .height(48.dp)
             ) {
-                Text("Volver")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = "Icono volver"
+                    )
+                    Text(
+                        text = "Volver",
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
             }
         }
     }

@@ -3,6 +3,7 @@ package com.example.android_mini_store.ui.theme.login
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -11,11 +12,13 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -30,13 +33,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.android_mini_store.Screen
 import com.example.android_mini_store.ui.theme.Android_mini_storeTheme
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import kotlinx.coroutines.delay
+
+// ICONOS OFFLINE
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Login
+import androidx.compose.material.icons.filled.PersonAdd
 
 @Composable
 fun LoginScreen(navController: NavHostController) {
     val viewModel: LoginViewModel = viewModel()
-
 
     val showSnackbar by viewModel.showSnackbar.collectAsState()
 
@@ -142,7 +149,7 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
                 .padding(bottom = 32.dp)
         )
 
-        // Botones
+        // Botones con iconos
         Column(
             modifier = Modifier
                 .fillMaxWidth(0.65f)
@@ -161,7 +168,13 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
                     contentColor = Color.White
                 )
             ) {
-                Text("Ingresar")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Login,
+                        contentDescription = "Ingresar"
+                    )
+                    Text("  Ingresar")
+                }
             }
 
             // Botón Regístrate
@@ -175,12 +188,18 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
                     .fillMaxWidth()
                     .height(48.dp),
             ) {
-                Text("Regístrate")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.PersonAdd,
+                        contentDescription = "Registrarse"
+                    )
+                    Text("  Regístrate")
+                }
             }
 
             // Botón Volver al Inicio
             Button(
-                onClick = {navController.navigate(Screen.Main.route)},
+                onClick = { navController.navigate(Screen.Main.route) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Red,
                     contentColor = Color.White
@@ -189,7 +208,13 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
                     .fillMaxWidth()
                     .height(48.dp)
             ) {
-                Text("Volver al Inicio")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Home,
+                        contentDescription = "Volver al inicio"
+                    )
+                    Text("  Volver al Inicio")
+                }
             }
         }
     }

@@ -38,7 +38,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-//import necesario para la navegacion entre vistas
+import androidx.compose.foundation.layout.Row
+
+
+// ICONOS OFFLINE
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+
+// Navegación
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -46,46 +54,61 @@ import androidx.navigation.compose.rememberNavController
 import com.example.android_mini_store.ui.theme.login.LoginScreen
 import com.example.android_mini_store.ui.theme.singIn.newUserScreen
 import com.example.android_mini_store.ui.theme.productos.ProductosScreen
+import com.example.android_mini_store.ui.theme.opciones.OpcionesScreen
+import com.example.android_mini_store.ui.theme.opciones.TextoAppScreen
 
-//import pantalla de carga
+// ✅ NUEVO IMPORT: DataStore
+import com.example.android_mini_store.data.PreferencesManager
+
+// Pantalla de carga
 import androidx.compose.material3.CircularProgressIndicator
 import kotlinx.coroutines.delay
 
-//import dialog para cierre de app
+// Dialogo cierre app
 import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.platform.LocalContext
 import android.app.Activity
 
-//rutas
+// Rutas
 sealed class Screen(val route: String) {
     object Main : Screen("main")
     object Products : Screen("products")
     object Login : Screen("login")
     object NewUser : Screen("newUser")
     object Loading : Screen("loading")
+    object Opciones : Screen("opciones")
+    object TextoApp : Screen("textoApp")
 }
 
 class MainActivity : ComponentActivity() {
+    // ✅ NUEVA VARIABLE: PreferencesManager
+    private lateinit var preferencesManager: PreferencesManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // ✅ NUEVA INICIALIZACIÓN: DataStore
+        preferencesManager = PreferencesManager(this)
+
         setContent {
             Android_mini_storeTheme {
-                // FONDO PARA TODA LA APLICACIÓN
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color(0xFFFBE10E))
                 ) {
-                    AppNavigation()
+                    // ✅ MODIFICADO: Pasar preferencesManager a AppNavigation
+                    AppNavigation(preferencesManager = preferencesManager)
                 }
             }
         }
     }
 }
 
+// ✅ MODIFICADO: Agregar parámetro preferencesManager
 @Composable
-fun AppNavigation() {
+fun AppNavigation(preferencesManager: PreferencesManager) {
     val navController = rememberNavController()
 
     NavHost(
@@ -104,9 +127,18 @@ fun AppNavigation() {
         composable(Screen.NewUser.route) {
             newUserScreen(navController = navController)
         }
-
         composable(Screen.Products.route) {
             ProductosScreen(navController = navController)
+        }
+        composable(Screen.Opciones.route) {
+            OpcionesScreen(navController = navController)
+        }
+        // ✅ MODIFICADO: Pasar preferencesManager a TextoAppScreen
+        composable(Screen.TextoApp.route) {
+            TextoAppScreen(
+                navController = navController,
+                preferencesManager = preferencesManager
+            )
         }
     }
 }
@@ -118,7 +150,6 @@ fun MainScreenWithWelcome(navController: NavHostController) {
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Mensaje de bienvenida
         Text(
             text = "¡Bienvenido a EKONO!",
             modifier = Modifier
@@ -140,16 +171,12 @@ fun MainScreenWithWelcome(navController: NavHostController) {
             color = Color.Black
         )
 
-        // Espaciado mensaje de bienvenida y botones
         Spacer(modifier = Modifier.height(60.dp))
 
-        // Botones
         ButtonsVertical(navController = navController)
 
-        // Espaciado entre botones y el card
         Spacer(modifier = Modifier.height(32.dp))
 
-        // CARD
         Box(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center
@@ -161,7 +188,6 @@ fun MainScreenWithWelcome(navController: NavHostController) {
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                // elementos alineados vertical
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -178,7 +204,6 @@ fun MainScreenWithWelcome(navController: NavHostController) {
                         modifier = Modifier.fillMaxWidth()
                     )
 
-
                     Image(
                         painter = painterResource(id = R.drawable.ekono2),
                         contentDescription = "logo ekono",
@@ -189,15 +214,12 @@ fun MainScreenWithWelcome(navController: NavHostController) {
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
 @Composable
 fun ButtonsVertical(navController: NavHostController) {
 
-    //funcion para mensaje de confirmacion de cierre app
     val context = LocalContext.current
     var showExitDialog by remember { mutableStateOf(false) }
 
@@ -210,7 +232,6 @@ fun ButtonsVertical(navController: NavHostController) {
                 Button(
                     onClick = {
                         showExitDialog = false
-                        // ✅ NUEVO: Cierra la aplicación
                         (context as? Activity)?.finishAffinity()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
@@ -228,27 +249,33 @@ fun ButtonsVertical(navController: NavHostController) {
         )
     }
 
-
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        //navega a la pantalla de productos
+
+        // ▶ Ver productos
         Button(
-            onClick = {
-                navController.navigate(Screen.Products.route)
-            },
-            modifier = Modifier
-                .fillMaxWidth(0.7f),
+            onClick = { navController.navigate(Screen.Products.route) },
+            modifier = Modifier.fillMaxWidth(0.7f),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF4CAF50),
                 contentColor = Color.White
             )
         ) {
-            Text(text = "Ver productos")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.ShoppingCart, contentDescription = "Productos")
+                Spacer(modifier = Modifier.size(8.dp))
+                Text("Ver productos")
+            }
         }
 
+        // ▶ Iniciar sesión
         Button(
             onClick = { navController.navigate(Screen.Loading.route) },
             modifier = Modifier.fillMaxWidth(0.7f),
@@ -257,50 +284,68 @@ fun ButtonsVertical(navController: NavHostController) {
                 contentColor = Color.White
             )
         ) {
-            Text(
-                text = "Iniciar sesión",
-                fontFamily = FontFamily.SansSerif,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.Lock, contentDescription = "Login")
+                Spacer(Modifier.size(8.dp))
+                Text("Iniciar sesión")
+            }
         }
 
+        // ▶ Opciones
         Button(
-            onClick = { },
+            onClick = { navController.navigate(Screen.Opciones.route) },
             modifier = Modifier.fillMaxWidth(0.7f),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.DarkGray,
                 contentColor = Color.White
             )
         ) {
-            Text(text = "Opciones")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.Build, contentDescription = "Opciones")
+                Spacer(Modifier.size(8.dp))
+                Text("Opciones")
+            }
         }
 
+        // ▶ Salir
         Button(
-            onClick = { showExitDialog = true},
-            modifier = Modifier
-                .fillMaxWidth(0.7f),
+            onClick = { showExitDialog = true },
+            modifier = Modifier.fillMaxWidth(0.7f),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFFF0000),
                 contentColor = Color.White
             )
         ) {
-            Text(text = "Salir de la APP")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.ExitToApp, contentDescription = "Salir")
+                Spacer(Modifier.size(8.dp))
+                Text("Salir de la APP")
+            }
         }
     }
 }
 
-//pantalla de carga
 @Composable
 fun LoadingScreen(navController: NavHostController) {
-    // temporizador
     LaunchedEffect(Unit) {
-        delay(1000) 
+        delay(1000)
         navController.navigate(Screen.Login.route) {
             popUpTo(Screen.Loading.route) { inclusive = true }
         }
     }
 
-    // ui de la pantalla de carga
     Column(
         modifier = Modifier
             .fillMaxSize()

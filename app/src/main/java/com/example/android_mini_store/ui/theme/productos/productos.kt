@@ -168,6 +168,12 @@ fun ProductosScreen(navController: NavHostController)
                             )
                             androidx.compose.material3.DropdownMenuItem(
                                 text = {
+                                    Text("Opciones", color = Color(0xFFFBE10E))
+                                },
+                                onClick = {navController.navigate(Screen.Opciones.route)}
+                            )
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = {
                                     Text("Iniciar Sesion", color = Color(0xFFFBE10E))
                                 },
                                 onClick = {
