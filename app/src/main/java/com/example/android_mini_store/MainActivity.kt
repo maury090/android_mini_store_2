@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
@@ -56,6 +55,7 @@ import com.example.android_mini_store.ui.theme.singIn.newUserScreen
 import com.example.android_mini_store.ui.theme.productos.ProductosScreen
 import com.example.android_mini_store.ui.theme.opciones.OpcionesScreen
 import com.example.android_mini_store.ui.theme.opciones.TextoAppScreen
+import com.example.android_mini_store.config.TextoConfig
 
 // ✅ NUEVO IMPORT: DataStore
 import com.example.android_mini_store.data.PreferencesManager
@@ -156,9 +156,9 @@ fun MainScreenWithWelcome(navController: NavHostController) {
                 .fillMaxWidth()
                 .padding(vertical = 20.dp),
             textAlign = TextAlign.Center,
-            fontSize = 30.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black
+            color = Color.Black,
+            fontSize = TextoConfig.tituloPantalla
         )
         Text(
             text = "Lugar de tu super descuento.",
@@ -166,7 +166,7 @@ fun MainScreenWithWelcome(navController: NavHostController) {
                 .fillMaxWidth()
                 .padding(vertical = 10.dp),
             textAlign = TextAlign.Center,
-            fontSize = 15.sp,
+            fontSize = TextoConfig.subtitulo,
             fontWeight = FontWeight.Bold,
             color = Color.Black
         )
@@ -199,7 +199,7 @@ fun MainScreenWithWelcome(navController: NavHostController) {
                     Text(
                         text = "Minimercados EKONO",
                         textAlign = TextAlign.Center,
-                        fontSize = 15.sp,
+                        fontSize = TextoConfig.cardCuerpo,
                         color = Color.Black,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -271,7 +271,9 @@ fun ButtonsVertical(navController: NavHostController) {
             ) {
                 Icon(Icons.Default.ShoppingCart, contentDescription = "Productos")
                 Spacer(modifier = Modifier.size(8.dp))
-                Text("Ver productos")
+
+                Text("Ver productos",
+                    fontSize = TextoConfig.boton)
             }
         }
 
@@ -291,7 +293,8 @@ fun ButtonsVertical(navController: NavHostController) {
             ) {
                 Icon(Icons.Default.Lock, contentDescription = "Login")
                 Spacer(Modifier.size(8.dp))
-                Text("Iniciar sesión")
+                Text("Iniciar sesión",
+                    fontSize = TextoConfig.boton)
             }
         }
 
@@ -311,7 +314,8 @@ fun ButtonsVertical(navController: NavHostController) {
             ) {
                 Icon(Icons.Default.Build, contentDescription = "Opciones")
                 Spacer(Modifier.size(8.dp))
-                Text("Opciones")
+                Text("Opciones",
+                    fontSize = TextoConfig.boton)
             }
         }
 
@@ -331,7 +335,8 @@ fun ButtonsVertical(navController: NavHostController) {
             ) {
                 Icon(Icons.Default.ExitToApp, contentDescription = "Salir")
                 Spacer(Modifier.size(8.dp))
-                Text("Salir de la APP")
+                Text("Salir de la APP",
+                    fontSize = TextoConfig.boton)
             }
         }
     }

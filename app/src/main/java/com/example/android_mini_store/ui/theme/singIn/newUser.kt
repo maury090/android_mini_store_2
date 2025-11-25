@@ -33,6 +33,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.android_mini_store.ui.theme.Android_mini_storeTheme
 
+// ✅ AGREGAR IMPORT PARA CONFIGURACIÓN DE TEXTO
+import com.example.android_mini_store.config.TextoConfig
+
 @Composable
 fun newUserScreen(navController: NavHostController) {
     Android_mini_storeTheme {
@@ -66,7 +69,8 @@ fun SignInContent(navController: NavHostController) {
             text = "Registro de nuevo usuario",
             style = MaterialTheme.typography.headlineMedium,
             color = Color.Black,
-            modifier = Modifier.padding(bottom = 18.dp)
+            modifier = Modifier.padding(bottom = 18.dp),
+            fontSize = TextoConfig.tituloPantalla // ✅ MODIFICACIÓN AGREGADA
         )
 
         // CAMPO NOMBRE
@@ -76,8 +80,18 @@ fun SignInContent(navController: NavHostController) {
                 nombre = it
                 nombreError = isValidNombre(it).message
             },
-            label = { Text("Ingresa tu nombre") },
-            placeholder = { Text("Pedro") },
+            label = {
+                Text(
+                    "Ingresa tu nombre",
+                    fontSize = TextoConfig.textoNormal // ✅ MODIFICACIÓN AGREGADA
+                )
+            },
+            placeholder = {
+                Text(
+                    "Pedro",
+                    fontSize = TextoConfig.pequeno // ✅ MODIFICACIÓN AGREGADA
+                )
+            },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next
@@ -98,7 +112,8 @@ fun SignInContent(navController: NavHostController) {
                 if (nombreError.isNotEmpty()) {
                     Text(
                         text = nombreError,
-                        color = if (isValidNombre(nombre).isValid) Color(0xFF4CAF50) else Color.Red
+                        color = if (isValidNombre(nombre).isValid) Color(0xFF4CAF50) else Color.Red,
+                        fontSize = TextoConfig.pequeno // ✅ MODIFICACIÓN AGREGADA
                     )
                 }
             },
@@ -114,8 +129,18 @@ fun SignInContent(navController: NavHostController) {
                 apellido = it
                 apellidoError = isValidApellido(it).message
             },
-            label = { Text("Ingresa tu apellido") },
-            placeholder = { Text("Picapiedra") },
+            label = {
+                Text(
+                    "Ingresa tu apellido",
+                    fontSize = TextoConfig.textoNormal // ✅ MODIFICACIÓN AGREGADA
+                )
+            },
+            placeholder = {
+                Text(
+                    "Picapiedra",
+                    fontSize = TextoConfig.pequeno // ✅ MODIFICACIÓN AGREGADA
+                )
+            },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next
@@ -136,7 +161,8 @@ fun SignInContent(navController: NavHostController) {
                 if (apellidoError.isNotEmpty()) {
                     Text(
                         text = apellidoError,
-                        color = if (isValidApellido(apellido).isValid) Color(0xFF4CAF50) else Color.Red
+                        color = if (isValidApellido(apellido).isValid) Color(0xFF4CAF50) else Color.Red,
+                        fontSize = TextoConfig.pequeno // ✅ MODIFICACIÓN AGREGADA
                     )
                 }
             },
@@ -152,8 +178,18 @@ fun SignInContent(navController: NavHostController) {
                 email = it
                 emailError = isValidEmail(it).message
             },
-            label = { Text("Ingresa tu correo") },
-            placeholder = { Text("algo@correo.com") },
+            label = {
+                Text(
+                    "Ingresa tu correo",
+                    fontSize = TextoConfig.textoNormal // ✅ MODIFICACIÓN AGREGADA
+                )
+            },
+            placeholder = {
+                Text(
+                    "algo@correo.com",
+                    fontSize = TextoConfig.pequeno // ✅ MODIFICACIÓN AGREGADA
+                )
+            },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
@@ -174,7 +210,8 @@ fun SignInContent(navController: NavHostController) {
                 if (emailError.isNotEmpty()) {
                     Text(
                         text = emailError,
-                        color = if (isValidEmail(email).isValid) Color(0xFF4CAF50) else Color.Red
+                        color = if (isValidEmail(email).isValid) Color(0xFF4CAF50) else Color.Red,
+                        fontSize = TextoConfig.pequeno // ✅ MODIFICACIÓN AGREGADA
                     )
                 }
             },
@@ -190,8 +227,18 @@ fun SignInContent(navController: NavHostController) {
                 direccion = it
                 direccionError = isValidDireccion(it).message
             },
-            label = { Text("Ingresa tu dirección") },
-            placeholder = { Text("Av. SiempreViva 742") },
+            label = {
+                Text(
+                    "Ingresa tu dirección",
+                    fontSize = TextoConfig.textoNormal // ✅ MODIFICACIÓN AGREGADA
+                )
+            },
+            placeholder = {
+                Text(
+                    "Av. SiempreViva 742",
+                    fontSize = TextoConfig.pequeno // ✅ MODIFICACIÓN AGREGADA
+                )
+            },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next
@@ -212,7 +259,8 @@ fun SignInContent(navController: NavHostController) {
                 if (direccionError.isNotEmpty()) {
                     Text(
                         text = direccionError,
-                        color = if (isValidDireccion(direccion).isValid) Color(0xFF4CAF50) else Color.Red
+                        color = if (isValidDireccion(direccion).isValid) Color(0xFF4CAF50) else Color.Red,
+                        fontSize = TextoConfig.pequeno // ✅ MODIFICACIÓN AGREGADA
                     )
                 }
             },
@@ -232,8 +280,18 @@ fun SignInContent(navController: NavHostController) {
                 rut = textoFiltrado
                 rutError = isValidRUT(rut).message
             },
-            label = { Text("Ingresa tu RUT") },
-            placeholder = { Text("123456789") },
+            label = {
+                Text(
+                    "Ingresa tu RUT",
+                    fontSize = TextoConfig.textoNormal // ✅ MODIFICACIÓN AGREGADA
+                )
+            },
+            placeholder = {
+                Text(
+                    "123456789",
+                    fontSize = TextoConfig.pequeno // ✅ MODIFICACIÓN AGREGADA
+                )
+            },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Done
@@ -254,13 +312,14 @@ fun SignInContent(navController: NavHostController) {
                 if (rutError.isNotEmpty()) {
                     Text(
                         text = rutError,
-                        color = if (isValidRUT(rut).isValid) Color(0xFF4CAF50) else Color.Red
+                        color = if (isValidRUT(rut).isValid) Color(0xFF4CAF50) else Color.Red,
+                        fontSize = TextoConfig.pequeno // ✅ MODIFICACIÓN AGREGADA
                     )
                 } else {
                     Text(
                         text = "RUT entre 8-9 dígitos. Ej: 12345678 o 123456789",
                         color = Color.Gray,
-                        fontSize = 12.sp
+                        fontSize = TextoConfig.pequeno // ✅ MODIFICACIÓN AGREGADA
                     )
                 }
             },
@@ -298,7 +357,8 @@ fun SignInContent(navController: NavHostController) {
                     )
                     Text(
                         text = "Registrarse",
-                        modifier = Modifier.padding(start = 8.dp)
+                        modifier = Modifier.padding(start = 8.dp),
+                        fontSize = TextoConfig.boton // ✅ MODIFICACIÓN AGREGADA
                     )
                 }
             }
@@ -323,7 +383,8 @@ fun SignInContent(navController: NavHostController) {
                     )
                     Text(
                         text = "Volver",
-                        modifier = Modifier.padding(start = 8.dp)
+                        modifier = Modifier.padding(start = 8.dp),
+                        fontSize = TextoConfig.boton // ✅ MODIFICACIÓN AGREGADA
                     )
                 }
             }

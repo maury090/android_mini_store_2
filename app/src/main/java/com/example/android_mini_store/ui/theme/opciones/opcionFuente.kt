@@ -1,5 +1,6 @@
 package com.example.android_mini_store.ui.theme.opciones
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
@@ -10,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -30,6 +32,7 @@ enum class TamanioFuente(val descripcion: String, val factor: Float) {
 @Composable
 fun TextoAppScreen(navController: NavHostController, preferencesManager: PreferencesManager) {
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current // ✅ AGREGADO: Para el Toast
 
     // Estado para el tamaño de fuente seleccionado
     var tamanioSeleccionado by remember { mutableStateOf(TamanioFuente.STANDAR) }
@@ -53,14 +56,14 @@ fun TextoAppScreen(navController: NavHostController, preferencesManager: Prefere
             .fillMaxSize()
             .background(Color(0xFFFBE10E))
     ) {
-        // Barra superior roja personalizada
+        // Barra superior roja
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
                 .background(Color.Red)
         ) {
-            // Flecha de retroceso en esquina superior izquierda
+            // flecha de retroceso
             IconButton(
                 onClick = { navController.popBackStack() },
                 modifier = Modifier
@@ -82,7 +85,8 @@ fun TextoAppScreen(navController: NavHostController, preferencesManager: Prefere
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFFFBE10E),
                 modifier = Modifier.align(Alignment.Center),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                fontSize = TextoConfig.tituloPantalla
             )
         }
 
@@ -93,7 +97,7 @@ fun TextoAppScreen(navController: NavHostController, preferencesManager: Prefere
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Título de la sección - CENTRADO
+
             Text(
                 text = "Tamaño de fuente",
                 style = MaterialTheme.typography.headlineMedium,
@@ -102,10 +106,11 @@ fun TextoAppScreen(navController: NavHostController, preferencesManager: Prefere
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 8.dp),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                fontSize = TextoConfig.tituloPantalla
             )
 
-            // Descripción - CENTRADA
+
             Text(
                 text = "Selecciona el tamaño de texto que prefieres para la aplicación",
                 style = MaterialTheme.typography.bodyMedium,
@@ -113,7 +118,8 @@ fun TextoAppScreen(navController: NavHostController, preferencesManager: Prefere
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                fontSize = TextoConfig.subtitulo
             )
 
             // RadioButtons para los tamaños de fuente
@@ -158,7 +164,7 @@ fun TextoAppScreen(navController: NavHostController, preferencesManager: Prefere
             // Espacio de 25dp entre el card y el botón
             Spacer(modifier = Modifier.height(25.dp))
 
-            // Botón "Guardar configuración" - FUNCIONAL
+            // boton guardado de configuracion de fuente y toast de confirmacion
             Button(
                 onClick = {
                     // ✅ GUARDAR CONFIGURACIÓN AL PRESIONAR EL BOTÓN
@@ -167,6 +173,13 @@ fun TextoAppScreen(navController: NavHostController, preferencesManager: Prefere
                         preferencesManager.guardarTextoTamanio(tamanioSeleccionado.factor)
                         // Actualizar configuración global
                         TextoConfig.actualizarTamanio(tamanioSeleccionado.factor)
+
+                        // ✅ TOAST DE CONFIRMACIÓN AGREGADO
+                        Toast.makeText(
+                            context,
+                            "✅ Configuración guardada correctamente",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 },
                 modifier = Modifier

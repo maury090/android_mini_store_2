@@ -41,6 +41,9 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.PersonAdd
 
+// ✅ AGREGAR IMPORT PARA CONFIGURACIÓN DE TEXTO
+import com.example.android_mini_store.config.TextoConfig
+
 @Composable
 fun LoginScreen(navController: NavHostController) {
     val viewModel: LoginViewModel = viewModel()
@@ -72,14 +75,16 @@ fun LoginScreen(navController: NavHostController) {
                         ) {
                             Text(
                                 "Cerrar",
-                                color = Color.White
+                                color = Color.White,
+                                fontSize = TextoConfig.boton // ✅ MODIFICACIÓN AGREGADA
                             )
                         }
                     }
                 ) {
                     Text(
                         "Campos de correo y contraseña vacíos",
-                        color = Color.White
+                        color = Color.White,
+                        fontSize = TextoConfig.textoNormal // ✅ MODIFICACIÓN AGREGADA
                     )
                 }
             }
@@ -105,15 +110,26 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
             text = "Iniciar Sesión",
             style = MaterialTheme.typography.headlineMedium,
             color = Color.Black,
-            modifier = Modifier.padding(bottom = 38.dp)
+            modifier = Modifier.padding(bottom = 38.dp),
+            fontSize = TextoConfig.tituloPantalla // ✅ MODIFICACIÓN AGREGADA
         )
 
         // Campo email
         OutlinedTextField(
             value = email,
             onValueChange = { viewModel.updateEmail(it) },
-            label = { Text("Correo electrónico") },
-            placeholder = { Text("ejemplo@correo.com") },
+            label = {
+                Text(
+                    "Correo electrónico",
+                    fontSize = TextoConfig.textoNormal // ✅ MODIFICACIÓN AGREGADA
+                )
+            },
+            placeholder = {
+                Text(
+                    "ejemplo@correo.com",
+                    fontSize = TextoConfig.pequeno // ✅ MODIFICACIÓN AGREGADA
+                )
+            },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
@@ -132,8 +148,18 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
         OutlinedTextField(
             value = password,
             onValueChange = { viewModel.updatePassword(it) },
-            label = { Text("Contraseña") },
-            placeholder = { Text("Ingresa tu contraseña") },
+            label = {
+                Text(
+                    "Contraseña",
+                    fontSize = TextoConfig.textoNormal // ✅ MODIFICACIÓN AGREGADA
+                )
+            },
+            placeholder = {
+                Text(
+                    "Ingresa tu contraseña",
+                    fontSize = TextoConfig.pequeno // ✅ MODIFICACIÓN AGREGADA
+                )
+            },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             colors = OutlinedTextFieldDefaults.colors(
@@ -159,7 +185,7 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
         ) {
             // Botón de Ingresar
             Button(
-                onClick = {},
+                onClick = {viewModel.onLoginClick()},
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
@@ -173,7 +199,10 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
                         imageVector = Icons.Default.Login,
                         contentDescription = "Ingresar"
                     )
-                    Text("  Ingresar")
+                    Text(
+                        "  Ingresar",
+                        fontSize = TextoConfig.boton // ✅ MODIFICACIÓN AGREGADA
+                    )
                 }
             }
 
@@ -193,7 +222,10 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
                         imageVector = Icons.Default.PersonAdd,
                         contentDescription = "Registrarse"
                     )
-                    Text("  Regístrate")
+                    Text(
+                        "  Regístrate",
+                        fontSize = TextoConfig.boton // ✅ MODIFICACIÓN AGREGADA
+                    )
                 }
             }
 
@@ -213,7 +245,10 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
                         imageVector = Icons.Default.Home,
                         contentDescription = "Volver al inicio"
                     )
-                    Text("  Volver al Inicio")
+                    Text(
+                        "  Volver al Inicio",
+                        fontSize = TextoConfig.boton // ✅ MODIFICACIÓN AGREGADA
+                    )
                 }
             }
         }

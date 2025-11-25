@@ -18,6 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.android_mini_store.Screen
+//import para el cambio tamaño en la fuente
+import com.example.android_mini_store.config.TextoConfig
 
 @Composable
 fun OpcionesScreen(navController: NavHostController) {
@@ -54,7 +56,8 @@ fun OpcionesScreen(navController: NavHostController) {
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFFFBE10E), // Color amarillo del fondo de la app
-                modifier = Modifier.align(Alignment.Center)
+                modifier = Modifier.align(Alignment.Center),
+                fontSize = TextoConfig.tituloPantalla,
             )
         }
 
@@ -114,7 +117,8 @@ fun OpcionesScreen(navController: NavHostController) {
                 Text(
                     text = "Volver a página inicio",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = TextoConfig.boton // ← MODIFICACIÓN AGREGADA
                 )
             }
         }
@@ -158,12 +162,14 @@ fun BotonOpcion(
                 Text(
                     text = titulo,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = TextoConfig.cardTitulo // ← MODIFICACIÓN AGREGADA
                 )
                 Text(
                     text = subtitulo,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.DarkGray
+                    color = Color.DarkGray,
+                    fontSize = TextoConfig.cardCuerpo // ← MODIFICACIÓN AGREGADA
                 )
             }
 

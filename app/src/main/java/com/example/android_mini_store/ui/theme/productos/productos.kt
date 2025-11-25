@@ -51,6 +51,8 @@ import androidx.compose.ui.unit.sp
 import com.example.android_mini_store.R
 import androidx.navigation.NavHostController
 import com.example.android_mini_store.Screen
+//import para la modificacion de textos
+import com.example.android_mini_store.config.TextoConfig
 
 // Data class para los productos
 data class Producto(
@@ -144,7 +146,9 @@ fun ProductosScreen(navController: NavHostController)
                         ) {
                             androidx.compose.material3.DropdownMenuItem(
                                 text = {
-                                    Text("Bebestibles", color = Color(0xFFFBE10E))
+                                    Text("Bebestibles",
+                                        color = Color(0xFFFBE10E),
+                                        fontSize = TextoConfig.menu)
                                 },
                                 onClick = {}
                             )
@@ -156,13 +160,17 @@ fun ProductosScreen(navController: NavHostController)
                             )
                             androidx.compose.material3.DropdownMenuItem(
                                 text = {
-                                    Text("Abarrotes", color = Color(0xFFFBE10E))
+                                    Text("Abarrotes",
+                                        color = Color(0xFFFBE10E),
+                                        fontSize = TextoConfig.menu)
                                 },
                                 onClick = {}
                             )
                             androidx.compose.material3.DropdownMenuItem(
                                 text = {
-                                    Text("Articulos de hogar", color = Color(0xFFFBE10E))
+                                    Text("Articulos de hogar",
+                                        color = Color(0xFFFBE10E),
+                                        fontSize = TextoConfig.menu)
                                 },
                                 onClick = {}
                             )
@@ -174,7 +182,9 @@ fun ProductosScreen(navController: NavHostController)
                             )
                             androidx.compose.material3.DropdownMenuItem(
                                 text = {
-                                    Text("Iniciar Sesion", color = Color(0xFFFBE10E))
+                                    Text("Iniciar Sesion",
+                                        color = Color(0xFFFBE10E),
+                                        fontSize = TextoConfig.menu)
                                 },
                                 onClick = {
                                     menuExpanded = false
@@ -189,7 +199,7 @@ fun ProductosScreen(navController: NavHostController)
                     Text(
                         text = "Productos de la semana",
                         color = Color(0xFFFBE10E),
-                        fontSize = 24.sp,
+                        fontSize = TextoConfig.tituloPantalla,
                         fontWeight = FontWeight.Bold
                     )
 
@@ -218,7 +228,7 @@ fun ProductosScreen(navController: NavHostController)
                 Text(
                     text = "Revisa nuestras tiendas a lo largo del país",
                     color = Color.Black,
-                    fontSize = 16.sp,
+                    fontSize = TextoConfig.textoNormal,
                     fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(bottom = 12.dp)
@@ -262,7 +272,10 @@ fun ProductosScreen(navController: NavHostController)
                         ) {
                             androidx.compose.material3.DropdownMenuItem(
                                 text = {
-                                    Text("Av Alvarez 2290, Viña del Mar", color = Color.Black)
+                                    Text("Av Alvarez 2290, Viña del Mar",
+                                        color = Color.Black,
+                                        fontSize = TextoConfig.menu)
+
                                 },
                                 onClick = {
                                     tiendaSeleccionada = "Tienda Viña del Mar"
@@ -272,7 +285,9 @@ fun ProductosScreen(navController: NavHostController)
                             )
                             androidx.compose.material3.DropdownMenuItem(
                                 text = {
-                                    Text("Almte. Latorre 437, La Calera", color = Color.Black)
+                                    Text("Almte. Latorre 437, La Calera",
+                                        color = Color.Black,
+                                        fontSize = TextoConfig.menu)
                                 },
                                 onClick = {
                                     tiendaSeleccionada = "Tienda La Calera"
@@ -282,7 +297,9 @@ fun ProductosScreen(navController: NavHostController)
                             )
                             androidx.compose.material3.DropdownMenuItem(
                                 text = {
-                                    Text("Los Ceramistas 8633, La Reina", color = Color.Black)
+                                    Text("Los Ceramistas 8633, La Reina",
+                                        color = Color.Black,
+                                        fontSize = TextoConfig.menu)
                                 },
                                 onClick = {
                                     tiendaSeleccionada = "Tienda La Reina"
@@ -444,7 +461,7 @@ fun ProductosScreen(navController: NavHostController)
                     Text(
                         text = "Volver a Inicio",
                         color = Color.White,
-                        fontSize = 14.sp,
+                        fontSize = TextoConfig.boton,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -499,7 +516,7 @@ fun ProductoCard(
                 Text(
                     text = producto.nombre,
                     color = Color.Black,
-                    fontSize = 14.sp,
+                    fontSize = TextoConfig.cardTitulo,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     maxLines = 1
@@ -510,7 +527,7 @@ fun ProductoCard(
                 Text(
                     text = producto.descripcion,
                     color = Color.Gray,
-                    fontSize = 12.sp,
+                    fontSize = TextoConfig.cardCuerpo,
                     textAlign = TextAlign.Center,
                     maxLines = 2
                 )
