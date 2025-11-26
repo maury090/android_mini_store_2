@@ -40,35 +40,35 @@ fun isValidDireccion(direccion: String): ValidationResult {
     }
 }
 
-// ✅ VALIDACIÓN DE RUT MEJORADA: Con validación de longitud (8-9 dígitos)
+// VALIDACIÓN DE RUT MODIFICADA: Sin mensaje de sugerencia, solo correcto/incorrecto
 fun isValidRUT(rutIngresado: String): ValidationResult {
     if (rutIngresado.isEmpty()) return ValidationResult(false, "El RUT es obligatorio")
 
     // Convertir a mayúsculas y limpiar espacios
     val rutLimpio = rutIngresado.uppercase().replace(" ", "")
 
-    // ✅ NUEVA VALIDACIÓN: Longitud total entre 8 y 9 caracteres
+    // VALIDACIÓN: Longitud total entre 8 y 9 caracteres
     if (rutLimpio.length < 8 || rutLimpio.length > 9) {
-        return ValidationResult(false, "El RUT debe tener entre 8 y 9 dígitos (incluyendo el verificador)")
+        return ValidationResult(false, "RUT inválido")
     }
 
     // Separar número y dígito verificador (último carácter)
     val numeroStr = rutLimpio.substring(0, rutLimpio.length - 1)
     val digitoVerificador = rutLimpio.last()
 
-    // ✅ VERIFICACIÓN PARA PERSONAS: entre 7 y 8 dígitos en la parte numérica
+    // VERIFICACIÓN PARA PERSONAS: entre 7 y 8 dígitos en la parte numérica
     if (numeroStr.length < 7 || numeroStr.length > 8) {
-        return ValidationResult(false, "RUT inválido. La parte numérica debe tener 7 u 8 dígitos")
+        return ValidationResult(false, "RUT inválido")
     }
 
     // Verificar que el número sean solo dígitos
     if (!numeroStr.all { it.isDigit() }) {
-        return ValidationResult(false, "La parte numérica del RUT debe contener solo números")
+        return ValidationResult(false, "RUT inválido")
     }
 
     // SOLO PERMITIR K COMO LETRA VÁLIDA
     if (!digitoVerificador.isDigit() && digitoVerificador != 'K') {
-        return ValidationResult(false, "Dígito verificador inválido. Solo se permite K como letra")
+        return ValidationResult(false, "RUT inválido")
     }
 
     // Calcular dígito verificador esperado
@@ -78,7 +78,7 @@ fun isValidRUT(rutIngresado: String): ValidationResult {
     return if (digitoCalculado == digitoVerificador) {
         ValidationResult(true, "RUT válido")
     } else {
-        ValidationResult(false, "Dígito verificador incorrecto. Debería ser: $digitoCalculado")
+        ValidationResult(false, "RUT inválido") // SOLO "RUT inválido" sin detalles
     }
 }
 
@@ -99,5 +99,17 @@ private fun calcularDigitoVerificador(rutSinDigito: String): Char {
         11 -> '0'
         10 -> 'K'
         else -> digito.toString().first()
+    }
+}
+
+// VALIDACIÓN: CONTRASEÑA ALFANUMÉRICA SIN SÍMBOLOS (4-8 CARACTERES)
+fun isValidContrasena(contrasena: String): ValidationResult {
+    return when {
+        contrasena.isEmpty() -> ValidationResult(false, "La contraseña es obligatoria")
+        contrasena.length < 4 -> ValidationResult(false, "Contraseña demasiado corta")
+        contrasena.length > 8 -> ValidationResult(false, "Máximo 8 caracteres")
+        contrasena.any { it.isUpperCase() } -> ValidationResult(false, "No se permiten mayúsculas")
+        !contrasena.matches(Regex("^[a-z0-9]*$")) -> ValidationResult(false, "Solo letras minúsculas y números")
+        else -> ValidationResult(true, "Contraseña válida")
     }
 }
