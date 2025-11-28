@@ -1,5 +1,20 @@
 package com.example.android_mini_store.ui.theme.singIn
 
+// -----------------------------------------------------
+// IMPORTS CRUCIALES
+// -----------------------------------------------------
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.CoroutineScope
+import androidx.compose.ui.text.font.FontWeight
+import com.example.android_mini_store.Screen
+
+// MANTENER IMPORTS EXISTENTES
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,12 +30,15 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,19 +52,73 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.android_mini_store.ui.theme.Android_mini_storeTheme
-
-// ✅ IMPORT PARA CONFIGURACIÓN DE TEXTO
 import com.example.android_mini_store.config.TextoConfig
+import com.example.android_mini_store.ui.auth.AuthViewModel
+import androidx.compose.foundation.layout.size
 
 @Composable
-fun newUserScreen(navController: NavHostController) {
+fun newUserScreen(
+    navController: NavHostController,
+    authViewModel: AuthViewModel
+) {
+    val registerState by authViewModel.registerState.collectAsState()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(registerState) {
+        when (val state = registerState) {
+            is AuthViewModel.RegisterState.Success -> {
+                navController.navigate(Screen.RegistrationSuccess.route) {
+                    popUpTo(Screen.NewUser.route) { inclusive = true }
+                }
+                authViewModel.clearRegisterState()
+            }
+            is AuthViewModel.RegisterState.Error -> {
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = state.message,
+                        duration = SnackbarDuration.Long
+                    )
+                }
+                authViewModel.clearRegisterState()
+            }
+            else -> {}
+        }
+    }
+
     Android_mini_storeTheme {
-        SignInContent(navController)
+        // -----------------------------------------------------------------
+        // ✅ CAMBIO DE COLOR DE FONDO A 0xFFFBE10E
+        // -----------------------------------------------------------------
+        Scaffold(
+            snackbarHost = {
+                SnackbarHost(hostState = snackbarHostState)
+            },
+            // Color(0xFFFBE10E) es el color solicitado
+            containerColor = Color(0xFFFBE10E)
+        ) { paddingValues ->
+            SignInContent(
+                navController = navController,
+                authViewModel = authViewModel,
+                registerState = registerState,
+                snackbarHostState = snackbarHostState,
+                scope = scope,
+                paddingValues = paddingValues
+            )
+        }
     }
 }
 
 @Composable
-fun SignInContent(navController: NavHostController) {
+fun SignInContent(
+    navController: NavHostController,
+    authViewModel: AuthViewModel,
+    registerState: AuthViewModel.RegisterState,
+    snackbarHostState: SnackbarHostState,
+    scope: CoroutineScope,
+    paddingValues: PaddingValues
+) {
     var nombre by remember { mutableStateOf("") }
     var apellido by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -54,7 +126,6 @@ fun SignInContent(navController: NavHostController) {
     var direccion by remember { mutableStateOf("") }
     var contrasena by remember { mutableStateOf("") }
 
-    // ESTADOS PARA ERRORES
     var nombreError by remember { mutableStateOf("") }
     var apellidoError by remember { mutableStateOf("") }
     var emailError by remember { mutableStateOf("") }
@@ -62,13 +133,24 @@ fun SignInContent(navController: NavHostController) {
     var direccionError by remember { mutableStateOf("") }
     var contrasenaError by remember { mutableStateOf("") }
 
-    // ESTADO DE SCROLL
     val scrollState = rememberScrollState()
+    val isLoading = registerState is AuthViewModel.RegisterState.Loading
+
+    // FUNCIÓN PARA MOSTRAR SNACKBAR
+    fun showCustomSnackbar(message: String) {
+        scope.launch {
+            snackbarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Long
+            )
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(14.dp)
+            .padding(paddingValues)
+            .padding(horizontal = 14.dp)
             .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
@@ -86,48 +168,27 @@ fun SignInContent(navController: NavHostController) {
             value = nombre,
             onValueChange = {
                 nombre = it
-                nombreError = isValidNombre(it).message
+                nombreError = if (it.length < 2 && it.isNotEmpty()) "Mínimo 2 caracteres" else ""
             },
-            label = {
-                Text(
-                    "Ingresa tu nombre",
-                    fontSize = TextoConfig.textoNormal
-                )
-            },
-            placeholder = {
-                Text(
-                    "Pedro",
-                    fontSize = TextoConfig.pequeno
-                )
-            },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next
-            ),
+            label = { Text("Ingresa tu nombre", fontSize = TextoConfig.textoNormal) },
+            placeholder = { Text("Pedro", fontSize = TextoConfig.pequeno) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
-                errorContainerColor = Color.White,
                 focusedTextColor = Color.Black,
                 unfocusedTextColor = Color.Black,
-                errorTextColor = Color.Black,
                 focusedBorderColor = Color.Gray,
-                unfocusedBorderColor = Color.Gray,
-                errorBorderColor = Color.Gray
+                unfocusedBorderColor = Color.Gray
             ),
-            isError = nombreError.isNotEmpty() && !isValidNombre(nombre).isValid,
+            isError = nombreError.isNotEmpty(),
             supportingText = {
                 if (nombreError.isNotEmpty()) {
-                    Text(
-                        text = nombreError,
-                        color = if (isValidNombre(nombre).isValid) Color(0xFF4CAF50) else Color.Red,
-                        fontSize = TextoConfig.pequeno
-                    )
+                    Text(text = nombreError, color = Color.Red, fontSize = TextoConfig.pequeno)
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp)
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            enabled = !isLoading
         )
 
         // CAMPO APELLIDO
@@ -135,48 +196,27 @@ fun SignInContent(navController: NavHostController) {
             value = apellido,
             onValueChange = {
                 apellido = it
-                apellidoError = isValidApellido(it).message
+                apellidoError = if (it.length < 2 && it.isNotEmpty()) "Mínimo 2 caracteres" else ""
             },
-            label = {
-                Text(
-                    "Ingresa tu apellido",
-                    fontSize = TextoConfig.textoNormal
-                )
-            },
-            placeholder = {
-                Text(
-                    "Picapiedra",
-                    fontSize = TextoConfig.pequeno
-                )
-            },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next
-            ),
+            label = { Text("Ingresa tu apellido", fontSize = TextoConfig.textoNormal) },
+            placeholder = { Text("Picapiedra", fontSize = TextoConfig.pequeno) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
-                errorContainerColor = Color.White,
                 focusedTextColor = Color.Black,
                 unfocusedTextColor = Color.Black,
-                errorTextColor = Color.Black,
                 focusedBorderColor = Color.Gray,
-                unfocusedBorderColor = Color.Gray,
-                errorBorderColor = Color.Gray
+                unfocusedBorderColor = Color.Gray
             ),
-            isError = apellidoError.isNotEmpty() && !isValidApellido(apellido).isValid,
+            isError = apellidoError.isNotEmpty(),
             supportingText = {
                 if (apellidoError.isNotEmpty()) {
-                    Text(
-                        text = apellidoError,
-                        color = if (isValidApellido(apellido).isValid) Color(0xFF4CAF50) else Color.Red,
-                        fontSize = TextoConfig.pequeno
-                    )
+                    Text(text = apellidoError, color = Color.Red, fontSize = TextoConfig.pequeno)
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp)
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            enabled = !isLoading
         )
 
         // CAMPO EMAIL
@@ -184,48 +224,27 @@ fun SignInContent(navController: NavHostController) {
             value = email,
             onValueChange = {
                 email = it
-                emailError = isValidEmail(it).message
+                emailError = if (!it.contains("@") && it.isNotEmpty()) "Email debe contener @" else ""
             },
-            label = {
-                Text(
-                    "Ingresa tu correo",
-                    fontSize = TextoConfig.textoNormal
-                )
-            },
-            placeholder = {
-                Text(
-                    "algo@correo.com",
-                    fontSize = TextoConfig.pequeno
-                )
-            },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Next
-            ),
+            label = { Text("Ingresa tu correo", fontSize = TextoConfig.textoNormal) },
+            placeholder = { Text("algo@correo.com", fontSize = TextoConfig.pequeno) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
-                errorContainerColor = Color.White,
                 focusedTextColor = Color.Black,
                 unfocusedTextColor = Color.Black,
-                errorTextColor = Color.Black,
                 focusedBorderColor = Color.Gray,
-                unfocusedBorderColor = Color.Gray,
-                errorBorderColor = Color.Gray
+                unfocusedBorderColor = Color.Gray
             ),
-            isError = emailError.isNotEmpty() && !isValidEmail(email).isValid,
+            isError = emailError.isNotEmpty(),
             supportingText = {
                 if (emailError.isNotEmpty()) {
-                    Text(
-                        text = emailError,
-                        color = if (isValidEmail(email).isValid) Color(0xFF4CAF50) else Color.Red,
-                        fontSize = TextoConfig.pequeno
-                    )
+                    Text(text = emailError, color = Color.Red, fontSize = TextoConfig.pequeno)
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp)
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            enabled = !isLoading
         )
 
         // CAMPO DIRECCIÓN
@@ -233,229 +252,162 @@ fun SignInContent(navController: NavHostController) {
             value = direccion,
             onValueChange = {
                 direccion = it
-                direccionError = isValidDireccion(it).message
+                direccionError = if (it.length < 5 && it.isNotEmpty()) "Mínimo 5 caracteres" else ""
             },
-            label = {
-                Text(
-                    "Ingresa tu dirección",
-                    fontSize = TextoConfig.textoNormal
-                )
-            },
-            placeholder = {
-                Text(
-                    "Av. SiempreViva 742",
-                    fontSize = TextoConfig.pequeno
-                )
-            },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next
-            ),
+            label = { Text("Ingresa tu dirección", fontSize = TextoConfig.textoNormal) },
+            placeholder = { Text("Av. SiempreViva 742", fontSize = TextoConfig.pequeno) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
-                errorContainerColor = Color.White,
                 focusedTextColor = Color.Black,
                 unfocusedTextColor = Color.Black,
-                errorTextColor = Color.Black,
                 focusedBorderColor = Color.Gray,
-                unfocusedBorderColor = Color.Gray,
-                errorBorderColor = Color.Gray
+                unfocusedBorderColor = Color.Gray
             ),
-            isError = direccionError.isNotEmpty() && !isValidDireccion(direccion).isValid,
+            isError = direccionError.isNotEmpty(),
             supportingText = {
                 if (direccionError.isNotEmpty()) {
-                    Text(
-                        text = direccionError,
-                        color = if (isValidDireccion(direccion).isValid) Color(0xFF4CAF50) else Color.Red,
-                        fontSize = TextoConfig.pequeno
-                    )
+                    Text(text = direccionError, color = Color.Red, fontSize = TextoConfig.pequeno)
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp)
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            enabled = !isLoading
         )
 
         // CAMPO RUT
         OutlinedTextField(
             value = rut,
             onValueChange = { nuevoValor ->
-                val textoFiltrado = nuevoValor.filter {
-                    it.isDigit() || it == 'K' || it == 'k'
-                }.uppercase()
-
+                val textoFiltrado = nuevoValor.filter { it.isDigit() || it == 'K' || it == 'k' }.uppercase()
                 rut = textoFiltrado
-                rutError = isValidRUT(rut).message
+                rutError = if (rut.length < 8 && rut.isNotEmpty()) "RUT debe tener 8-9 dígitos" else ""
             },
-            label = {
-                Text(
-                    "Ingresa tu RUT",
-                    fontSize = TextoConfig.textoNormal
-                )
-            },
-            placeholder = {
-                Text(
-                    "123456789",
-                    fontSize = TextoConfig.pequeno
-                )
-            },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next
-            ),
+            label = { Text("Ingresa tu RUT", fontSize = TextoConfig.textoNormal) },
+            placeholder = { Text("123456789", fontSize = TextoConfig.pequeno) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
-                errorContainerColor = Color.White,
                 focusedTextColor = Color.Black,
                 unfocusedTextColor = Color.Black,
-                errorTextColor = Color.Black,
                 focusedBorderColor = Color.Gray,
-                unfocusedBorderColor = Color.Gray,
-                errorBorderColor = Color.Gray
+                unfocusedBorderColor = Color.Gray
             ),
-            isError = rutError.isNotEmpty() && !isValidRUT(rut).isValid,
+            isError = rutError.isNotEmpty(),
             supportingText = {
                 if (rutError.isNotEmpty()) {
-                    Text(
-                        text = rutError,
-                        color = if (isValidRUT(rut).isValid) Color(0xFF4CAF50) else Color.Red,
-                        fontSize = TextoConfig.pequeno
-                    )
+                    Text(text = rutError, color = Color.Red, fontSize = TextoConfig.pequeno)
                 } else {
-                    Text(
-                        text = "RUT entre 8-9 dígitos. Ej: 12345678 o 123456789",
-                        color = Color.Gray,
-                        fontSize = TextoConfig.pequeno
-                    )
+                    Text(text = "RUT entre 8-9 dígitos", color = Color.Gray, fontSize = TextoConfig.pequeno)
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp)
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            enabled = !isLoading
         )
 
         // CONTRASEÑA
         OutlinedTextField(
             value = contrasena,
             onValueChange = { nuevoValor ->
-                // LIMITAR FÍSICAMENTE A 8 CARACTERES
                 if (nuevoValor.length <= 8) {
                     contrasena = nuevoValor
-                    // USAR LA FUNCIÓN DE VALIDACIÓN
-                    val resultadoValidacion = isValidContrasena(nuevoValor)
-                    contrasenaError = if (!resultadoValidacion.isValid) resultadoValidacion.message else ""
-                } else {
-                    val resultadoValidacion = isValidContrasena(contrasena)
-                    contrasenaError = if (!resultadoValidacion.isValid) resultadoValidacion.message else "Máximo 8 caracteres"
+                    contrasenaError = if (nuevoValor.length < 4 && nuevoValor.isNotEmpty()) "Mínimo 4 caracteres" else ""
                 }
             },
-            label = {
-                Text(
-                    "Ingresa tu contraseña",
-                    fontSize = TextoConfig.textoNormal
-                )
-            },
-            placeholder = {
-                Text(
-                    "m1c0ntr4s3n4",
-                    fontSize = TextoConfig.pequeno
-                )
-            },
+            label = { Text("Ingresa tu contraseña", fontSize = TextoConfig.textoNormal) },
+            placeholder = { Text("m1c0ntr4s3n4", fontSize = TextoConfig.pequeno) },
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Done
-            ),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
-                errorContainerColor = Color.White,
                 focusedTextColor = Color.Black,
                 unfocusedTextColor = Color.Black,
-                errorTextColor = Color.Black,
                 focusedBorderColor = Color.Gray,
-                unfocusedBorderColor = Color.Gray,
-                errorBorderColor = Color.Gray
+                unfocusedBorderColor = Color.Gray
             ),
             isError = contrasenaError.isNotEmpty(),
             supportingText = {
                 if (contrasenaError.isNotEmpty()) {
-                    Text(
-                        text = contrasenaError,
-                        color = Color.Red,
-                        fontSize = TextoConfig.pequeno
-                    )
+                    Text(text = contrasenaError, color = Color.Red, fontSize = TextoConfig.pequeno)
                 } else {
-                    Text(
-                        text = "Solo letras minúsculas y números (4-8 caracteres)",
-                        color = Color.Gray,
-                        fontSize = TextoConfig.pequeno
-                    )
+                    Text(text = "4-8 caracteres", color = Color.Gray, fontSize = TextoConfig.pequeno)
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+            enabled = !isLoading
         )
 
-        // BOTONES CON ICONOS
+        // BOTONES
         Column(
             modifier = Modifier
                 .fillMaxWidth(0.65f)
-                .padding(top = 16.dp, bottom = 32.dp), // ✅ PADDING BOTTOM AGREGADO
+                .padding(top = 16.dp, bottom = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
-            // BOTÓN REGISTRARSE (Done)
+            // BOTÓN REGISTRARSE
             Button(
-                onClick = { },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
+                onClick = {
+                    if (isLoading) return@Button
+
+                    val isAnyFieldEmpty = nombre.isEmpty() || apellido.isEmpty() ||
+                            email.isEmpty() || rut.isEmpty() ||
+                            direccion.isEmpty() || contrasena.isEmpty()
+
+                    val isAnyFormatError = nombreError.isNotEmpty() || apellidoError.isNotEmpty() ||
+                            emailError.isNotEmpty() || rutError.isNotEmpty() ||
+                            direccionError.isNotEmpty() || contrasenaError.isNotEmpty()
+
+                    when {
+                        isAnyFieldEmpty -> {
+                            showCustomSnackbar("uno o mas campos necesarios incompletos")
+                        }
+                        isAnyFormatError -> {
+                            showCustomSnackbar("uno o mas datos ingresados de manera erronea")
+                        }
+                        else -> {
+                            authViewModel.registrarUsuario(
+                                rut = rut,
+                                nombre = nombre,
+                                apellido = apellido,
+                                correo = email,
+                                direccion = direccion,
+                                password = contrasena,
+                                rol = "cliente"
+                            )
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().height(48.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF4CAF50),
                     contentColor = Color.White
                 ),
+                enabled = !isLoading
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.Done,
-                        contentDescription = "Icono registrar"
-                    )
-                    Text(
-                        text = "Registrarse",
-                        modifier = Modifier.padding(start = 8.dp),
-                        fontSize = TextoConfig.boton
-                    )
+                if (isLoading) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.Done, contentDescription = "Registrar")
+                        Text("Registrarse", modifier = Modifier.padding(start = 8.dp), fontSize = TextoConfig.boton)
+                    }
                 }
             }
 
-            // BOTÓN VOLVER (ArrowBack)
+            // BOTÓN VOLVER
             Button(
-                onClick = {
-                    navController.popBackStack()
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Red,
-                    contentColor = Color.White
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
+                onClick = { if (!isLoading) navController.popBackStack() },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red, contentColor = Color.White),
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                enabled = !isLoading
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.ArrowBack,
-                        contentDescription = "Icono volver"
-                    )
-                    Text(
-                        text = "Volver",
-                        modifier = Modifier.padding(start = 8.dp),
-                        fontSize = TextoConfig.boton
-                    )
+                    Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
+                    Text("Volver", modifier = Modifier.padding(start = 8.dp), fontSize = TextoConfig.boton)
                 }
             }
         }

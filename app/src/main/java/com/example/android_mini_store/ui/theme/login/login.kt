@@ -41,14 +41,23 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.PersonAdd
 
-// ✅ AGREGAR IMPORT PARA CONFIGURACIÓN DE TEXTO
+// CONFIGURACIÓN DE TEXTO
 import com.example.android_mini_store.config.TextoConfig
 
+// ✅ IMPORT CORREGIDO - VERIFICA ESTA LÍNEA
+import com.example.android_mini_store.ui.auth.AuthViewModel
+
 @Composable
-fun LoginScreen(navController: NavHostController) {
+fun LoginScreen(
+    navController: NavHostController,
+    authViewModel: AuthViewModel
+) {
     val viewModel: LoginViewModel = viewModel()
 
     val showSnackbar by viewModel.showSnackbar.collectAsState()
+
+    // ✅ Estado del login desde Room
+    val loginState by authViewModel.loginState.collectAsState()
 
     // Ocultar automáticamente el Snackbar después de 3 segundos
     if (showSnackbar) {
@@ -58,9 +67,29 @@ fun LoginScreen(navController: NavHostController) {
         }
     }
 
+    // ✅ Manejar el resultado del login con Room
+    LaunchedEffect(loginState) {
+        when (loginState) {
+            is AuthViewModel.LoginState.Success -> {
+                // Login exitoso - navegar a pantalla principal
+                navController.navigate(Screen.Main.route) {
+                    popUpTo(Screen.Login.route) { inclusive = true }
+                }
+            }
+            is AuthViewModel.LoginState.Error -> {
+                // Mostrar error de Room
+                viewModel.showSnackbarWithMessage(
+                    (loginState as AuthViewModel.LoginState.Error).message
+                )
+                authViewModel.clearLoginState()
+            }
+            else -> {}
+        }
+    }
+
     Android_mini_storeTheme {
         Box(modifier = Modifier.fillMaxSize()) {
-            LoginContent(navController, viewModel)
+            LoginContent(navController, viewModel, authViewModel)
 
             // Snackbar en la PARTE SUPERIOR
             if (showSnackbar) {
@@ -76,7 +105,7 @@ fun LoginScreen(navController: NavHostController) {
                             Text(
                                 "Cerrar",
                                 color = Color.White,
-                                fontSize = TextoConfig.boton // ✅ MODIFICACIÓN AGREGADA
+                                fontSize = TextoConfig.boton
                             )
                         }
                     }
@@ -84,7 +113,7 @@ fun LoginScreen(navController: NavHostController) {
                     Text(
                         "Campos de correo y contraseña vacíos",
                         color = Color.White,
-                        fontSize = TextoConfig.textoNormal // ✅ MODIFICACIÓN AGREGADA
+                        fontSize = TextoConfig.textoNormal
                     )
                 }
             }
@@ -92,11 +121,23 @@ fun LoginScreen(navController: NavHostController) {
     }
 }
 
+private fun LoginViewModel.showSnackbarWithMessage(
+    message: String
+) {
+}
+
 @Composable
-fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
+fun LoginContent(
+    navController: NavHostController,
+    viewModel: LoginViewModel,
+    authViewModel: AuthViewModel
+) {
 
     val email by viewModel.email.collectAsState()
     val password by viewModel.password.collectAsState()
+
+    // ✅ Estado de loading desde Room
+    val isLoading = authViewModel.loginState.collectAsState().value is AuthViewModel.LoginState.Loading
 
     Column(
         modifier = Modifier
@@ -111,7 +152,7 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
             style = MaterialTheme.typography.headlineMedium,
             color = Color.Black,
             modifier = Modifier.padding(bottom = 38.dp),
-            fontSize = TextoConfig.tituloPantalla // ✅ MODIFICACIÓN AGREGADA
+            fontSize = TextoConfig.tituloPantalla
         )
 
         // Campo email
@@ -120,14 +161,14 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
             onValueChange = { viewModel.updateEmail(it) },
             label = {
                 Text(
-                    "Correo electrónico",
-                    fontSize = TextoConfig.textoNormal // ✅ MODIFICACIÓN AGREGADA
+                    "Correo electrónico o RUT",
+                    fontSize = TextoConfig.textoNormal
                 )
             },
             placeholder = {
                 Text(
-                    "ejemplo@correo.com",
-                    fontSize = TextoConfig.pequeno // ✅ MODIFICACIÓN AGREGADA
+                    "ejemplo@correo.com o 123456789",
+                    fontSize = TextoConfig.pequeno
                 )
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -151,13 +192,13 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
             label = {
                 Text(
                     "Contraseña",
-                    fontSize = TextoConfig.textoNormal // ✅ MODIFICACIÓN AGREGADA
+                    fontSize = TextoConfig.textoNormal
                 )
             },
             placeholder = {
                 Text(
                     "Ingresa tu contraseña",
-                    fontSize = TextoConfig.pequeno // ✅ MODIFICACIÓN AGREGADA
+                    fontSize = TextoConfig.pequeno
                 )
             },
             visualTransformation = PasswordVisualTransformation(),
@@ -185,24 +226,29 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
         ) {
             // Botón de Ingresar
             Button(
-                onClick = {viewModel.onLoginClick()},
+                onClick = {authViewModel.clearLoginState()},
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF4CAF50),
                     contentColor = Color.White
-                )
+                ),
+                enabled = !isLoading
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Login,
-                        contentDescription = "Ingresar"
-                    )
-                    Text(
-                        "  Ingresar",
-                        fontSize = TextoConfig.boton // ✅ MODIFICACIÓN AGREGADA
-                    )
+                if (isLoading) {
+                    Text("Cargando...")
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Login,
+                            contentDescription = "Ingresar"
+                        )
+                        Text(
+                            "  Ingresar",
+                            fontSize = TextoConfig.boton
+                        )
+                    }
                 }
             }
 
@@ -216,6 +262,7 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
+                enabled = !isLoading
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -224,7 +271,7 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
                     )
                     Text(
                         "  Regístrate",
-                        fontSize = TextoConfig.boton // ✅ MODIFICACIÓN AGREGADA
+                        fontSize = TextoConfig.boton
                     )
                 }
             }
@@ -238,7 +285,8 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .height(48.dp),
+                enabled = !isLoading
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -247,7 +295,7 @@ fun LoginContent(navController: NavHostController, viewModel: LoginViewModel) {
                     )
                     Text(
                         "  Volver al Inicio",
-                        fontSize = TextoConfig.boton // ✅ MODIFICACIÓN AGREGADA
+                        fontSize = TextoConfig.boton
                     )
                 }
             }
