@@ -1,20 +1,11 @@
 package com.example.android_mini_store.ui.theme.singIn
 
 // -----------------------------------------------------
-// IMPORTS CRUCIALES
+// IMPORTS ACTUALIZADOS (Añadimos Scaffold, Color y PaddingValues)
 // -----------------------------------------------------
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarDuration
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.CoroutineScope
-import androidx.compose.ui.text.font.FontWeight
-import com.example.android_mini_store.Screen
-
-// MANTENER IMPORTS EXISTENTES
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -45,7 +36,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -63,47 +53,26 @@ fun newUserScreen(
 ) {
     val registerState by authViewModel.registerState.collectAsState()
 
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-
     LaunchedEffect(registerState) {
-        when (val state = registerState) {
-            is AuthViewModel.RegisterState.Success -> {
-                navController.navigate(Screen.RegistrationSuccess.route) {
-                    popUpTo(Screen.NewUser.route) { inclusive = true }
-                }
-                authViewModel.clearRegisterState()
+        if (registerState is AuthViewModel.RegisterState.Success) {
+            navController.navigate("login") {
+                popUpTo("newUser") { inclusive = true }
             }
-            is AuthViewModel.RegisterState.Error -> {
-                scope.launch {
-                    snackbarHostState.showSnackbar(
-                        message = state.message,
-                        duration = SnackbarDuration.Long
-                    )
-                }
-                authViewModel.clearRegisterState()
-            }
-            else -> {}
+            authViewModel.clearRegisterState()
         }
     }
 
     Android_mini_storeTheme {
-        // -----------------------------------------------------------------
-        // ✅ CAMBIO DE COLOR DE FONDO A 0xFFFBE10E
-        // -----------------------------------------------------------------
+        // 👇 USO DE SCAFFOLD PARA EL COLOR DE FONDO
         Scaffold(
-            snackbarHost = {
-                SnackbarHost(hostState = snackbarHostState)
-            },
-            // Color(0xFFFBE10E) es el color solicitado
+            // ✅ Establece el color de fondo amarillo (0xFFFBE10E)
             containerColor = Color(0xFFFBE10E)
         ) { paddingValues ->
             SignInContent(
                 navController = navController,
                 authViewModel = authViewModel,
                 registerState = registerState,
-                snackbarHostState = snackbarHostState,
-                scope = scope,
+                // ✅ Pasamos el padding del Scaffold al contenido
                 paddingValues = paddingValues
             )
         }
@@ -115,8 +84,7 @@ fun SignInContent(
     navController: NavHostController,
     authViewModel: AuthViewModel,
     registerState: AuthViewModel.RegisterState,
-    snackbarHostState: SnackbarHostState,
-    scope: CoroutineScope,
+    // ✅ Nuevo parámetro para recibir el padding del Scaffold
     paddingValues: PaddingValues
 ) {
     var nombre by remember { mutableStateOf("") }
@@ -132,23 +100,33 @@ fun SignInContent(
     var rutError by remember { mutableStateOf("") }
     var direccionError by remember { mutableStateOf("") }
     var contrasenaError by remember { mutableStateOf("") }
+    var roomError by remember { mutableStateOf("") }
+
+    // El LaunchedEffect original (para errores de la BD) se mantiene
+    LaunchedEffect(registerState) {
+        if (registerState is AuthViewModel.RegisterState.Error) {
+            roomError = (registerState as AuthViewModel.RegisterState.Error).message
+        }
+    }
 
     val scrollState = rememberScrollState()
     val isLoading = registerState is AuthViewModel.RegisterState.Loading
 
-    // FUNCIÓN PARA MOSTRAR SNACKBAR
-    fun showCustomSnackbar(message: String) {
-        scope.launch {
-            snackbarHostState.showSnackbar(
-                message = message,
-                duration = SnackbarDuration.Long
-            )
-        }
-    }
+    // Definición de colores para los campos de texto
+    val DefaultTextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = Color.White,
+        unfocusedContainerColor = Color.White,
+        focusedTextColor = Color.Black,
+        unfocusedTextColor = Color.Black,
+        focusedBorderColor = Color.Gray,
+        unfocusedBorderColor = Color.Gray
+    )
+
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            // 👇 Aplicamos el padding del Scaffold (para evitar que el contenido se solape con la barra de estado/navegación)
             .padding(paddingValues)
             .padding(horizontal = 14.dp)
             .verticalScroll(scrollState),
@@ -163,24 +141,31 @@ fun SignInContent(
             fontSize = TextoConfig.tituloPantalla
         )
 
+        if (roomError.isNotEmpty()) {
+            Text(
+                text = roomError,
+                color = Color.Red,
+                fontSize = TextoConfig.textoNormal,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            )
+        }
+
+        // --- CAMPOS DE TEXTO (Se mantienen igual) ---
+
         // CAMPO NOMBRE
         OutlinedTextField(
             value = nombre,
             onValueChange = {
                 nombre = it
-                nombreError = if (it.length < 2 && it.isNotEmpty()) "Mínimo 2 caracteres" else ""
+                nombreError = if (it.length < 2) "Mínimo 2 caracteres" else ""
+                roomError = ""
             },
             label = { Text("Ingresa tu nombre", fontSize = TextoConfig.textoNormal) },
             placeholder = { Text("Pedro", fontSize = TextoConfig.pequeno) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                focusedBorderColor = Color.Gray,
-                unfocusedBorderColor = Color.Gray
-            ),
+            colors = DefaultTextFieldColors,
             isError = nombreError.isNotEmpty(),
             supportingText = {
                 if (nombreError.isNotEmpty()) {
@@ -196,19 +181,13 @@ fun SignInContent(
             value = apellido,
             onValueChange = {
                 apellido = it
-                apellidoError = if (it.length < 2 && it.isNotEmpty()) "Mínimo 2 caracteres" else ""
+                apellidoError = if (it.length < 2) "Mínimo 2 caracteres" else ""
+                roomError = ""
             },
             label = { Text("Ingresa tu apellido", fontSize = TextoConfig.textoNormal) },
             placeholder = { Text("Picapiedra", fontSize = TextoConfig.pequeno) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                focusedBorderColor = Color.Gray,
-                unfocusedBorderColor = Color.Gray
-            ),
+            colors = DefaultTextFieldColors,
             isError = apellidoError.isNotEmpty(),
             supportingText = {
                 if (apellidoError.isNotEmpty()) {
@@ -224,19 +203,13 @@ fun SignInContent(
             value = email,
             onValueChange = {
                 email = it
-                emailError = if (!it.contains("@") && it.isNotEmpty()) "Email debe contener @" else ""
+                emailError = if (!it.contains("@")) "Email debe contener @" else ""
+                roomError = ""
             },
             label = { Text("Ingresa tu correo", fontSize = TextoConfig.textoNormal) },
             placeholder = { Text("algo@correo.com", fontSize = TextoConfig.pequeno) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                focusedBorderColor = Color.Gray,
-                unfocusedBorderColor = Color.Gray
-            ),
+            colors = DefaultTextFieldColors,
             isError = emailError.isNotEmpty(),
             supportingText = {
                 if (emailError.isNotEmpty()) {
@@ -252,19 +225,13 @@ fun SignInContent(
             value = direccion,
             onValueChange = {
                 direccion = it
-                direccionError = if (it.length < 5 && it.isNotEmpty()) "Mínimo 5 caracteres" else ""
+                direccionError = if (it.length < 5) "Mínimo 5 caracteres" else ""
+                roomError = ""
             },
             label = { Text("Ingresa tu dirección", fontSize = TextoConfig.textoNormal) },
             placeholder = { Text("Av. SiempreViva 742", fontSize = TextoConfig.pequeno) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                focusedBorderColor = Color.Gray,
-                unfocusedBorderColor = Color.Gray
-            ),
+            colors = DefaultTextFieldColors,
             isError = direccionError.isNotEmpty(),
             supportingText = {
                 if (direccionError.isNotEmpty()) {
@@ -281,19 +248,13 @@ fun SignInContent(
             onValueChange = { nuevoValor ->
                 val textoFiltrado = nuevoValor.filter { it.isDigit() || it == 'K' || it == 'k' }.uppercase()
                 rut = textoFiltrado
-                rutError = if (rut.length < 8 && rut.isNotEmpty()) "RUT debe tener 8-9 dígitos" else ""
+                rutError = if (rut.length < 8) "RUT debe tener 8-9 dígitos" else ""
+                roomError = ""
             },
             label = { Text("Ingresa tu RUT", fontSize = TextoConfig.textoNormal) },
             placeholder = { Text("123456789", fontSize = TextoConfig.pequeno) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                focusedBorderColor = Color.Gray,
-                unfocusedBorderColor = Color.Gray
-            ),
+            colors = DefaultTextFieldColors,
             isError = rutError.isNotEmpty(),
             supportingText = {
                 if (rutError.isNotEmpty()) {
@@ -312,21 +273,15 @@ fun SignInContent(
             onValueChange = { nuevoValor ->
                 if (nuevoValor.length <= 8) {
                     contrasena = nuevoValor
-                    contrasenaError = if (nuevoValor.length < 4 && nuevoValor.isNotEmpty()) "Mínimo 4 caracteres" else ""
+                    contrasenaError = if (nuevoValor.length < 4) "Mínimo 4 caracteres" else ""
+                    roomError = ""
                 }
             },
             label = { Text("Ingresa tu contraseña", fontSize = TextoConfig.textoNormal) },
             placeholder = { Text("m1c0ntr4s3n4", fontSize = TextoConfig.pequeno) },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                focusedBorderColor = Color.Gray,
-                unfocusedBorderColor = Color.Gray
-            ),
+            colors = DefaultTextFieldColors,
             isError = contrasenaError.isNotEmpty(),
             supportingText = {
                 if (contrasenaError.isNotEmpty()) {
@@ -351,8 +306,6 @@ fun SignInContent(
             // BOTÓN REGISTRARSE
             Button(
                 onClick = {
-                    if (isLoading) return@Button
-
                     val isAnyFieldEmpty = nombre.isEmpty() || apellido.isEmpty() ||
                             email.isEmpty() || rut.isEmpty() ||
                             direccion.isEmpty() || contrasena.isEmpty()
@@ -363,12 +316,13 @@ fun SignInContent(
 
                     when {
                         isAnyFieldEmpty -> {
-                            showCustomSnackbar("uno o mas campos necesarios incompletos")
+                            roomError = "Uno o más campos están vacíos."
                         }
                         isAnyFormatError -> {
-                            showCustomSnackbar("uno o mas datos ingresados de manera erronea")
+                            roomError = "Corrija los errores de formato en el formulario."
                         }
                         else -> {
+                            roomError = ""
                             authViewModel.registrarUsuario(
                                 rut = rut,
                                 nombre = nombre,
