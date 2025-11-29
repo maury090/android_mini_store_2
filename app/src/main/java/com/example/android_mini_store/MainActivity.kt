@@ -57,19 +57,20 @@ import com.example.android_mini_store.ui.theme.productos.ProductosScreen
 import com.example.android_mini_store.ui.theme.opciones.OpcionesScreen
 import com.example.android_mini_store.ui.theme.opciones.TextoAppScreen
 import com.example.android_mini_store.config.TextoConfig
+import com.example.android_mini_store.ui.theme.clientes.ClientesScreen
 
 // DataStore
 import com.example.android_mini_store.data.PreferencesManager
 
-// Room Database - IMPORTS SIMPLIFICADOS
+// room
 import com.example.android_mini_store.data.dataBase.AppDatabase
 import com.example.android_mini_store.data.repository.usuarioRepository
 import com.example.android_mini_store.ui.auth.AuthViewModel
 
-// ✅ NUEVAS IMPORTACIONES CLAVE PARA INYECCIÓN DE DEPENDENCIAS
-import com.example.android_mini_store.ui.auth.AuthViewModelFactory // Importa tu Factory
-import androidx.lifecycle.viewmodel.compose.viewModel // Helper de Compose para ViewModels
-import androidx.compose.ui.platform.LocalContext // Contexto para obtener la BD
+// imports para factory, viewM, BD
+import com.example.android_mini_store.ui.auth.AuthViewModelFactory
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.platform.LocalContext
 
 // Pantalla de carga
 import androidx.compose.material3.CircularProgressIndicator
@@ -89,51 +90,34 @@ sealed class Screen(val route: String) {
     object Loading : Screen("loading")
     object Opciones : Screen("opciones")
     object TextoApp : Screen("textoApp")
-
     object RegistrationSuccess : Screen("registrationSuccess")
+    object Cliente : Screen("cliente")
+
+
 }
 
 class MainActivity : ComponentActivity() {
     private lateinit var preferencesManager: PreferencesManager
 
-    // ❌ CÓDIGO ELIMINADO: Ya no necesitamos declarar ni inicializar 'authViewModel' aquí.
-    // private lateinit var authViewModel: AuthViewModel
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // ✅ CÓDIGO MANTENIDO
         preferencesManager = PreferencesManager(this)
 
-        // ❌ CÓDIGO ELIMINADO: Se mueve la inicialización de Room y ViewModel a setContent.
-        /*
-        val database = AppDatabase.getDatabase(this)
-        val usuarioDao = database.usuarioDao()
-        val usuarioRepository = usuarioRepository(usuarioDao)
-        authViewModel = AuthViewModel(usuarioRepository)
-        */
-
         setContent {
-            // 1. OBTENER EL CONTEXTO (necesario para la BD)
             val context = LocalContext.current
 
-            // 2. CREACIÓN DE DEPENDENCIAS (ROOM -> REPOSITORIO -> FACTORY)
-            // Se usa 'remember' para garantizar que las dependencias se creen una sola vez
             val factory = remember {
-                // Instancia de la Base de Datos y DAO
+                //dao y bd
                 val database = AppDatabase.getDatabase(context)
                 val dao = database.usuarioDao()
 
-                // Instancia del Repositorio
+                // repositorio
                 val repository = usuarioRepository(dao)
 
-                // Instancia del Factory del ViewModel (con el repositorio inyectado)
                 AuthViewModelFactory(repository)
             }
-
-            // 3. OBTENER EL VIEWMODEL (Inyectando el Repositorio con el Factory)
-            // ✅ CAMBIO CLAVE: Usamos el helper 'viewModel' que es consciente del ciclo de vida
             val authViewModel: AuthViewModel = viewModel(factory = factory)
 
             Android_mini_storeTheme {
@@ -142,10 +126,9 @@ class MainActivity : ComponentActivity() {
                         .fillMaxSize()
                         .background(Color(0xFFFBE10E))
                 ) {
-                    // 4. PASAR EL VIEWMODEL AL SISTEMA DE NAVEGACIÓN
                     AppNavigation(
                         preferencesManager = preferencesManager,
-                        authViewModel = authViewModel // ✅ CAMBIO MANTENIDO: Se pasa el ViewModel creado
+                        authViewModel = authViewModel
                     )
                 }
             }
@@ -153,7 +136,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// ✅ CÓDIGO MANTENIDO (La navegación ya acepta el ViewModel)
 @Composable
 fun AppNavigation(
     preferencesManager: PreferencesManager,
@@ -169,7 +151,7 @@ fun AppNavigation(
             MainScreenWithWelcome(navController = navController)
         }
         composable(Screen.Login.route) {
-            // ⚠️ ASEGÚRATE que LoginScreen acepta el authViewModel
+
             LoginScreen(
                 navController = navController,
                 authViewModel = authViewModel
@@ -179,7 +161,7 @@ fun AppNavigation(
             LoadingScreen(navController = navController)
         }
         composable(Screen.NewUser.route) {
-            // ⚠️ ASEGÚRATE que newUserScreen acepta el authViewModel
+
             newUserScreen(
                 navController = navController,
                 authViewModel = authViewModel
@@ -195,6 +177,12 @@ fun AppNavigation(
             TextoAppScreen(
                 navController = navController,
                 preferencesManager = preferencesManager
+            )
+        }
+        composable(Screen.Cliente.route) {
+            ClientesScreen(
+                navController = navController,
+                authViewModel = authViewModel
             )
         }
     }

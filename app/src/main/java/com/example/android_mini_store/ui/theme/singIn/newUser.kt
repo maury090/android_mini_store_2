@@ -1,9 +1,7 @@
 package com.example.android_mini_store.ui.theme.singIn
 
-// -----------------------------------------------------
-// IMPORTS ACTUALIZADOS (Añadimos Scaffold, Color y PaddingValues)
-// -----------------------------------------------------
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Arrangement
@@ -52,30 +50,57 @@ fun newUserScreen(
     authViewModel: AuthViewModel
 ) {
     val registerState by authViewModel.registerState.collectAsState()
+    var showSuccessDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(registerState) {
         if (registerState is AuthViewModel.RegisterState.Success) {
-            navController.navigate("login") {
-                popUpTo("newUser") { inclusive = true }
-            }
-            authViewModel.clearRegisterState()
+            showSuccessDialog = true
         }
     }
 
     Android_mini_storeTheme {
-        // 👇 USO DE SCAFFOLD PARA EL COLOR DE FONDO
         Scaffold(
-            // ✅ Establece el color de fondo amarillo (0xFFFBE10E)
             containerColor = Color(0xFFFBE10E)
         ) { paddingValues ->
             SignInContent(
                 navController = navController,
                 authViewModel = authViewModel,
                 registerState = registerState,
-                // ✅ Pasamos el padding del Scaffold al contenido
                 paddingValues = paddingValues
             )
         }
+    }
+
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showSuccessDialog = false
+                navController.navigate("login") {
+                    popUpTo("newUser") { inclusive = true }
+                }
+                authViewModel.clearRegisterState()
+            },
+            title = {
+                Text(text = "Registro Completado")
+            },
+            text = {
+                Text("Usuario creado correctamente")
+            },
+            confirmButton = {
+                Button(
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                    onClick = {
+                        showSuccessDialog = false
+                        navController.navigate("login") {
+                            popUpTo("newUser") { inclusive = true }
+                        }
+                        authViewModel.clearRegisterState()
+                    }
+                ) {
+                    Text("Iniciar Sesión")
+                }
+            }
+        )
     }
 }
 
@@ -84,7 +109,6 @@ fun SignInContent(
     navController: NavHostController,
     authViewModel: AuthViewModel,
     registerState: AuthViewModel.RegisterState,
-    // ✅ Nuevo parámetro para recibir el padding del Scaffold
     paddingValues: PaddingValues
 ) {
     var nombre by remember { mutableStateOf("") }
@@ -102,7 +126,9 @@ fun SignInContent(
     var contrasenaError by remember { mutableStateOf("") }
     var roomError by remember { mutableStateOf("") }
 
-    // El LaunchedEffect original (para errores de la BD) se mantiene
+    // 🆕 CORRECCIÓN: Estado para controlar validaciones solo al enviar
+    var shouldValidateAll by remember { mutableStateOf(false) }
+
     LaunchedEffect(registerState) {
         if (registerState is AuthViewModel.RegisterState.Error) {
             roomError = (registerState as AuthViewModel.RegisterState.Error).message
@@ -112,7 +138,30 @@ fun SignInContent(
     val scrollState = rememberScrollState()
     val isLoading = registerState is AuthViewModel.RegisterState.Loading
 
-    // Definición de colores para los campos de texto
+    // 🆕 CORRECCIÓN: Función para validar todos los campos
+    fun validateAllFields(): Boolean {
+        val nombreValidation = isValidNombre(nombre)
+        val apellidoValidation = isValidApellido(apellido)
+        val emailValidation = isValidEmail(email)
+        val direccionValidation = isValidDireccion(direccion)
+        val rutValidation = isValidRUT(rut)
+        val contrasenaValidation = isValidContrasena(contrasena)
+
+        nombreError = if (!nombreValidation.isValid) nombreValidation.message else ""
+        apellidoError = if (!apellidoValidation.isValid) apellidoValidation.message else ""
+        emailError = if (!emailValidation.isValid) emailValidation.message else ""
+        direccionError = if (!direccionValidation.isValid) direccionValidation.message else ""
+        rutError = if (!rutValidation.isValid) rutValidation.message else ""
+        contrasenaError = if (!contrasenaValidation.isValid) contrasenaValidation.message else ""
+
+        return nombreValidation.isValid &&
+                apellidoValidation.isValid &&
+                emailValidation.isValid &&
+                direccionValidation.isValid &&
+                rutValidation.isValid &&
+                contrasenaValidation.isValid
+    }
+
     val DefaultTextFieldColors = OutlinedTextFieldDefaults.colors(
         focusedContainerColor = Color.White,
         unfocusedContainerColor = Color.White,
@@ -122,11 +171,9 @@ fun SignInContent(
         unfocusedBorderColor = Color.Gray
     )
 
-
     Column(
         modifier = Modifier
             .fillMaxSize()
-            // 👇 Aplicamos el padding del Scaffold (para evitar que el contenido se solape con la barra de estado/navegación)
             .padding(paddingValues)
             .padding(horizontal = 14.dp)
             .verticalScroll(scrollState),
@@ -152,14 +199,22 @@ fun SignInContent(
             )
         }
 
-        // --- CAMPOS DE TEXTO (Se mantienen igual) ---
+        // --- CAMPOS DE TEXTO CORREGIDOS ---
 
-        // CAMPO NOMBRE
+        // 🆕 CORRECCIÓN: CAMPO NOMBRE - Validación mejorada
         OutlinedTextField(
             value = nombre,
             onValueChange = {
                 nombre = it
-                nombreError = if (it.length < 2) "Mínimo 2 caracteres" else ""
+                // 🆕 Validación en tiempo real solo básica, completa al enviar
+                nombreError = if (shouldValidateAll) {
+                    val validation = isValidNombre(it)
+                    if (!validation.isValid) validation.message else ""
+                } else if (it.isNotEmpty() && it.length < 2) {
+                    "Mínimo 2 caracteres"
+                } else {
+                    ""
+                }
                 roomError = ""
             },
             label = { Text("Ingresa tu nombre", fontSize = TextoConfig.textoNormal) },
@@ -176,12 +231,20 @@ fun SignInContent(
             enabled = !isLoading
         )
 
-        // CAMPO APELLIDO
+        // 🆕 CORRECCIÓN: CAMPO APELLIDO - Validación mejorada
         OutlinedTextField(
             value = apellido,
             onValueChange = {
                 apellido = it
-                apellidoError = if (it.length < 2) "Mínimo 2 caracteres" else ""
+                // 🆕 Validación en tiempo real solo básica, completa al enviar
+                apellidoError = if (shouldValidateAll) {
+                    val validation = isValidApellido(it)
+                    if (!validation.isValid) validation.message else ""
+                } else if (it.isNotEmpty() && it.length < 2) {
+                    "Mínimo 2 caracteres"
+                } else {
+                    ""
+                }
                 roomError = ""
             },
             label = { Text("Ingresa tu apellido", fontSize = TextoConfig.textoNormal) },
@@ -198,12 +261,20 @@ fun SignInContent(
             enabled = !isLoading
         )
 
-        // CAMPO EMAIL
+        // 🆕 CORRECCIÓN: CAMPO EMAIL - Validación mejorada
         OutlinedTextField(
             value = email,
             onValueChange = {
                 email = it
-                emailError = if (!it.contains("@")) "Email debe contener @" else ""
+                // 🆕 Validación en tiempo real solo básica, completa al enviar
+                emailError = if (shouldValidateAll) {
+                    val validation = isValidEmail(it)
+                    if (!validation.isValid) validation.message else ""
+                } else if (it.isNotEmpty() && !it.contains("@")) {
+                    "Email debe contener @"
+                } else {
+                    ""
+                }
                 roomError = ""
             },
             label = { Text("Ingresa tu correo", fontSize = TextoConfig.textoNormal) },
@@ -220,12 +291,20 @@ fun SignInContent(
             enabled = !isLoading
         )
 
-        // CAMPO DIRECCIÓN
+        // 🆕 CORRECCIÓN: CAMPO DIRECCIÓN - Validación mejorada
         OutlinedTextField(
             value = direccion,
             onValueChange = {
                 direccion = it
-                direccionError = if (it.length < 5) "Mínimo 5 caracteres" else ""
+                // 🆕 Validación en tiempo real solo básica, completa al enviar
+                direccionError = if (shouldValidateAll) {
+                    val validation = isValidDireccion(it)
+                    if (!validation.isValid) validation.message else ""
+                } else if (it.isNotEmpty() && it.length < 5) {
+                    "Mínimo 5 caracteres"
+                } else {
+                    ""
+                }
                 roomError = ""
             },
             label = { Text("Ingresa tu dirección", fontSize = TextoConfig.textoNormal) },
@@ -242,13 +321,21 @@ fun SignInContent(
             enabled = !isLoading
         )
 
-        // CAMPO RUT
+        // 🆕 CORRECCIÓN: CAMPO RUT - Validación mejorada
         OutlinedTextField(
             value = rut,
             onValueChange = { nuevoValor ->
                 val textoFiltrado = nuevoValor.filter { it.isDigit() || it == 'K' || it == 'k' }.uppercase()
                 rut = textoFiltrado
-                rutError = if (rut.length < 8) "RUT debe tener 8-9 dígitos" else ""
+                // 🆕 Validación en tiempo real solo básica, completa al enviar
+                rutError = if (shouldValidateAll) {
+                    val validation = isValidRUT(textoFiltrado)
+                    if (!validation.isValid) validation.message else ""
+                } else if (textoFiltrado.isNotEmpty() && textoFiltrado.length < 8) {
+                    "RUT debe tener 8-9 dígitos"
+                } else {
+                    ""
+                }
                 roomError = ""
             },
             label = { Text("Ingresa tu RUT", fontSize = TextoConfig.textoNormal) },
@@ -267,13 +354,21 @@ fun SignInContent(
             enabled = !isLoading
         )
 
-        // CONTRASEÑA
+        // 🆕 CORRECCIÓN: CONTRASEÑA - Validación mejorada
         OutlinedTextField(
             value = contrasena,
             onValueChange = { nuevoValor ->
                 if (nuevoValor.length <= 8) {
                     contrasena = nuevoValor
-                    contrasenaError = if (nuevoValor.length < 4) "Mínimo 4 caracteres" else ""
+                    // 🆕 Validación en tiempo real solo básica, completa al enviar
+                    contrasenaError = if (shouldValidateAll) {
+                        val validation = isValidContrasena(nuevoValor)
+                        if (!validation.isValid) validation.message else ""
+                    } else if (nuevoValor.isNotEmpty() && nuevoValor.length < 4) {
+                        "Mínimo 4 caracteres"
+                    } else {
+                        ""
+                    }
                     roomError = ""
                 }
             },
@@ -303,36 +398,27 @@ fun SignInContent(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
-            // BOTÓN REGISTRARSE
+            // 🆕 CORRECCIÓN: BOTÓN REGISTRARSE - Validación completa
             Button(
                 onClick = {
-                    val isAnyFieldEmpty = nombre.isEmpty() || apellido.isEmpty() ||
-                            email.isEmpty() || rut.isEmpty() ||
-                            direccion.isEmpty() || contrasena.isEmpty()
+                    shouldValidateAll = true // 🆕 Activar validaciones completas
 
-                    val isAnyFormatError = nombreError.isNotEmpty() || apellidoError.isNotEmpty() ||
-                            emailError.isNotEmpty() || rutError.isNotEmpty() ||
-                            direccionError.isNotEmpty() || contrasenaError.isNotEmpty()
+                    // 🆕 Usar función de validación completa
+                    val allFieldsValid = validateAllFields()
 
-                    when {
-                        isAnyFieldEmpty -> {
-                            roomError = "Uno o más campos están vacíos."
-                        }
-                        isAnyFormatError -> {
-                            roomError = "Corrija los errores de formato en el formulario."
-                        }
-                        else -> {
-                            roomError = ""
-                            authViewModel.registrarUsuario(
-                                rut = rut,
-                                nombre = nombre,
-                                apellido = apellido,
-                                correo = email,
-                                direccion = direccion,
-                                password = contrasena,
-                                rol = "cliente"
-                            )
-                        }
+                    if (allFieldsValid) {
+                        roomError = ""
+                        authViewModel.registrarUsuario(
+                            rut = rut,
+                            nombre = nombre,
+                            apellido = apellido,
+                            correo = email,
+                            direccion = direccion,
+                            password = contrasena,
+                            rol = "cliente"
+                        )
+                    } else {
+                        roomError = "Corrija los errores en el formulario"
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(48.dp),

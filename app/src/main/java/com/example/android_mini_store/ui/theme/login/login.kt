@@ -8,16 +8,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -33,7 +33,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.android_mini_store.Screen
 import com.example.android_mini_store.ui.theme.Android_mini_storeTheme
-import kotlinx.coroutines.delay
+
+// 🆕 IMPORT PARA TOAST
+import android.widget.Toast
 
 // ICONOS OFFLINE
 import androidx.compose.material.icons.Icons
@@ -44,7 +46,6 @@ import androidx.compose.material.icons.filled.PersonAdd
 // CONFIGURACIÓN DE TEXTO
 import com.example.android_mini_store.config.TextoConfig
 
-// ✅ IMPORT CORREGIDO - VERIFICA ESTA LÍNEA
 import com.example.android_mini_store.ui.auth.AuthViewModel
 
 @Composable
@@ -52,35 +53,28 @@ fun LoginScreen(
     navController: NavHostController,
     authViewModel: AuthViewModel
 ) {
-    val viewModel: LoginViewModel = viewModel()
+    // 🆕 CORRECCIÓN: Especificar explícitamente el tipo del ViewModel
+    val viewModel: LoginViewModel = viewModel<LoginViewModel>()
 
-    val showSnackbar by viewModel.showSnackbar.collectAsState()
+    // 🆕 AGREGADO: Contexto para Toast
+    val context = LocalContext.current
 
     // ✅ Estado del login desde Room
     val loginState by authViewModel.loginState.collectAsState()
 
-    // Ocultar automáticamente el Snackbar después de 3 segundos
-    if (showSnackbar) {
-        LaunchedEffect(showSnackbar) {
-            delay(3000)
-            viewModel.hideSnackbar()
-        }
-    }
-
-    // ✅ Manejar el resultado del login con Room
+    // 🆕 CORRECCIÓN: Manejar el resultado del login CON TOAST
     LaunchedEffect(loginState) {
         when (loginState) {
             is AuthViewModel.LoginState.Success -> {
-                // Login exitoso - navegar a pantalla principal
-                navController.navigate(Screen.Main.route) {
+                // 🆕 Login exitoso - navegar a pantalla CLIENTES
+                navController.navigate(Screen.Cliente.route) {  // 🆕 CAMBIADO A Screen.Cliente.route
                     popUpTo(Screen.Login.route) { inclusive = true }
                 }
             }
             is AuthViewModel.LoginState.Error -> {
-                // Mostrar error de Room
-                viewModel.showSnackbarWithMessage(
-                    (loginState as AuthViewModel.LoginState.Error).message
-                )
+                // 🆕 Mostrar mensaje específico de error CON TOAST
+                val errorMessage = (loginState as AuthViewModel.LoginState.Error).message
+                Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
                 authViewModel.clearLoginState()
             }
             else -> {}
@@ -89,48 +83,18 @@ fun LoginScreen(
 
     Android_mini_storeTheme {
         Box(modifier = Modifier.fillMaxSize()) {
-            LoginContent(navController, viewModel, authViewModel)
-
-            // Snackbar en la PARTE SUPERIOR
-            if (showSnackbar) {
-                Snackbar(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(16.dp)
-                        .statusBarsPadding(),
-                    action = {
-                        TextButton(
-                            onClick = { viewModel.hideSnackbar() }
-                        ) {
-                            Text(
-                                "Cerrar",
-                                color = Color.White,
-                                fontSize = TextoConfig.boton
-                            )
-                        }
-                    }
-                ) {
-                    Text(
-                        "Campos de correo y contraseña vacíos",
-                        color = Color.White,
-                        fontSize = TextoConfig.textoNormal
-                    )
-                }
-            }
+            // 🆕 PASAMOS EL CONTEXT AL CONTENT
+            LoginContent(navController, viewModel, authViewModel, context)
         }
     }
-}
-
-private fun LoginViewModel.showSnackbarWithMessage(
-    message: String
-) {
 }
 
 @Composable
 fun LoginContent(
     navController: NavHostController,
     viewModel: LoginViewModel,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    context: android.content.Context // 🆕 AGREGADO: Context para Toast
 ) {
 
     val email by viewModel.email.collectAsState()
@@ -155,7 +119,7 @@ fun LoginContent(
             fontSize = TextoConfig.tituloPantalla
         )
 
-        // Campo email
+        // Campo email/RUT
         OutlinedTextField(
             value = email,
             onValueChange = { viewModel.updateEmail(it) },
@@ -171,7 +135,7 @@ fun LoginContent(
                     fontSize = TextoConfig.pequeno
                 )
             },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
@@ -226,7 +190,14 @@ fun LoginContent(
         ) {
             // Botón de Ingresar
             Button(
-                onClick = {authViewModel.clearLoginState()},
+                onClick = {
+                    // 🆕 CORRECCIÓN: Validar campos vacíos con TOAST
+                    if (email.isEmpty() || password.isEmpty()) {
+                        Toast.makeText(context, "Complete todos los campos", Toast.LENGTH_LONG).show()
+                    } else {
+                        authViewModel.login(email, password)
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
@@ -237,7 +208,17 @@ fun LoginContent(
                 enabled = !isLoading
             ) {
                 if (isLoading) {
-                    Text("Cargando...")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            " Verificando...",
+                            fontSize = TextoConfig.boton,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -246,7 +227,8 @@ fun LoginContent(
                         )
                         Text(
                             "  Ingresar",
-                            fontSize = TextoConfig.boton
+                            fontSize = TextoConfig.boton,
+                            modifier = Modifier.padding(start = 8.dp)
                         )
                     }
                 }
@@ -271,7 +253,8 @@ fun LoginContent(
                     )
                     Text(
                         "  Regístrate",
-                        fontSize = TextoConfig.boton
+                        fontSize = TextoConfig.boton,
+                        modifier = Modifier.padding(start = 8.dp)
                     )
                 }
             }
@@ -295,7 +278,8 @@ fun LoginContent(
                     )
                     Text(
                         "  Volver al Inicio",
-                        fontSize = TextoConfig.boton
+                        fontSize = TextoConfig.boton,
+                        modifier = Modifier.padding(start = 8.dp)
                     )
                 }
             }
