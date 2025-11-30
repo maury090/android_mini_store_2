@@ -41,7 +41,7 @@ class AuthViewModel(private val usuarioRepository: usuarioRepository) : ViewMode
         }
     }
 
-    // 👇 FUNCIÓN DE REGISTRO - ✅ MODIFICADA CON LOGS
+    // 👇 FUNCIÓN DE REGISTRO
     fun registrarUsuario(
         rut: String,
         nombre: String,
@@ -54,15 +54,6 @@ class AuthViewModel(private val usuarioRepository: usuarioRepository) : ViewMode
         _registerState.value = RegisterState.Loading
         viewModelScope.launch {
             try {
-                // ✅ LOG: INICIANDO REGISTRO
-                println("🟡 [AUTH-VIEWMODEL] INICIANDO REGISTRO DE USUARIO")
-                println("📋 [AUTH-VIEWMODEL] Datos recibidos:")
-                println("   👤 RUT: $rut")
-                println("   📛 Nombre: $nombre $apellido")
-                println("   📧 Email: $correo")
-                println("   🏠 Dirección: $direccion")
-                println("   🔐 Rol: $rol")
-
                 val result = usuarioRepository.registrarUsuario(
                     rut = rut,
                     nombre = nombre,
@@ -74,20 +65,12 @@ class AuthViewModel(private val usuarioRepository: usuarioRepository) : ViewMode
                 )
 
                 if (result.isSuccess) {
-                    // ✅ LOG: REGISTRO EXITOSO
-                    println("✅ [AUTH-VIEWMODEL] USUARIO REGISTRADO EXITOSAMENTE")
-                    println("🎉 [AUTH-VIEWMODEL] Navegando a estado Success")
                     _registerState.value = RegisterState.Success
                 } else {
-                    // ✅ LOG: ERROR EN REGISTRO
                     val errorMsg = result.exceptionOrNull()?.message ?: "Error en el registro"
-                    println("❌ [AUTH-VIEWMODEL] ERROR EN REGISTRO: $errorMsg")
-                    println("💥 [AUTH-VIEWMODEL] Navegando a estado Error")
                     _registerState.value = RegisterState.Error(errorMsg)
                 }
             } catch (e: Exception) {
-                // ✅ LOG: EXCEPCIÓN
-                println("🚨 [AUTH-VIEWMODEL] EXCEPCIÓN CAPTURADA: ${e.message}")
                 _registerState.value = RegisterState.Error("Error de conexión: ${e.message}")
             }
         }

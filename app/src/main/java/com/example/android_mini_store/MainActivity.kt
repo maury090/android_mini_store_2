@@ -58,6 +58,8 @@ import com.example.android_mini_store.ui.theme.opciones.OpcionesScreen
 import com.example.android_mini_store.ui.theme.opciones.TextoAppScreen
 import com.example.android_mini_store.config.TextoConfig
 import com.example.android_mini_store.ui.theme.clientes.ClientesScreen
+import com.example.android_mini_store.ui.theme.admin.UserAdminScreen
+import com.example.android_mini_store.ui.theme.admin.RevisionUsuariosScreen
 
 // DataStore
 import com.example.android_mini_store.data.PreferencesManager
@@ -80,6 +82,12 @@ import kotlinx.coroutines.delay
 import androidx.compose.material3.AlertDialog
 import android.app.Activity
 
+// 🆕 IMPORT PARA CREAR USUARIO ADMIN
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
+
 
 // Rutas
 sealed class Screen(val route: String) {
@@ -92,8 +100,8 @@ sealed class Screen(val route: String) {
     object TextoApp : Screen("textoApp")
     object RegistrationSuccess : Screen("registrationSuccess")
     object Cliente : Screen("cliente")
-
-
+    object Admin : Screen("admin")
+    object RevisionUsuarios : Screen("revision_usuarios")
 }
 
 class MainActivity : ComponentActivity() {
@@ -104,6 +112,17 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         preferencesManager = PreferencesManager(this)
+
+        // 🆕 INICIALIZAR USUARIO ADMIN AL CREAR LA ACTIVIDAD
+        val database = AppDatabase.getDatabase(this)
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                database.usuarioDao().crearUsuarioAdminInicial()
+                println("✅ [MAIN] Verificación de usuario admin completada")
+            } catch (e: Exception) {
+                println("❌ [MAIN] Error inicializando admin: ${e.message}")
+            }
+        }
 
         setContent {
             val context = LocalContext.current
@@ -184,6 +203,12 @@ fun AppNavigation(
                 navController = navController,
                 authViewModel = authViewModel
             )
+        }
+        composable(Screen.Admin.route) {
+            UserAdminScreen(navController)
+        }
+        composable("revision_usuarios") {
+            RevisionUsuariosScreen(navController = navController)
         }
     }
 }

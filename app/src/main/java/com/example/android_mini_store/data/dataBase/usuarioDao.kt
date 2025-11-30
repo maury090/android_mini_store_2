@@ -14,6 +14,10 @@ interface UsuarioDao {
     @Insert
     suspend fun registrarUsuario(usuario: UsuarioEntity)
 
+    // 🆕 CREAR USUARIO ADMIN
+    @Insert
+    suspend fun crearUsuarioAdmin(usuario: UsuarioEntity)
+
     // Verificar si RUT ya existe
     @Query("SELECT COUNT(*) FROM usuarios WHERE rut = :rut")
     suspend fun rutExiste(rut: String): Int
@@ -21,6 +25,10 @@ interface UsuarioDao {
     // Verificar si correo ya existe
     @Query("SELECT COUNT(*) FROM usuarios WHERE correo = :correo")
     suspend fun correoExiste(correo: String): Int
+
+    // 🆕 VERIFICAR SI USUARIO ADMIN EXISTE
+    @Query("SELECT COUNT(*) FROM usuarios WHERE rut = '88888888-8'")
+    suspend fun existeUsuarioAdmin(): Int
 
     // Obtener usuario por RUT
     @Query("SELECT * FROM usuarios WHERE rut = :rut")
@@ -37,4 +45,32 @@ interface UsuarioDao {
     // Obtener todos los usuarios activos
     @Query("SELECT * FROM usuarios WHERE activo = 1")
     fun getAllUsuarios(): Flow<List<UsuarioEntity>>
+
+    // 🆕 FUNCIÓN PARA CREAR ADMIN INICIAL
+    suspend fun crearUsuarioAdminInicial() {
+        try {
+            if (existeUsuarioAdmin() == 0) {
+                val adminUser = UsuarioEntity(
+                    rut = "88888888-8",
+                    nombre = "Admin",
+                    apellido = "EKONO",
+                    correo = "admin@ekono.com",
+                    direccion = "Oficina Central",
+                    password = "admin123",
+                    rol = "admin",
+                    fechaRegistro = System.currentTimeMillis(),
+                    activo = true
+                )
+                crearUsuarioAdmin(adminUser)
+                println("✅ [DATABASE] USUARIO ADMIN CREADO AUTOMÁTICAMENTE")
+                println("📧 Email: admin@ekono.com")
+                println("🔐 Password: admin123")
+                println("🎯 Rol: admin")
+            } else {
+                println("ℹ️ [DATABASE] Usuario admin ya existe")
+            }
+        } catch (e: Exception) {
+            println("❌ [DATABASE] Error creando usuario admin: ${e.message}")
+        }
+    }
 }

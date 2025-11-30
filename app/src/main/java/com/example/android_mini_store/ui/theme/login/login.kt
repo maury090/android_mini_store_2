@@ -62,22 +62,63 @@ fun LoginScreen(
     // ✅ Estado del login desde Room
     val loginState by authViewModel.loginState.collectAsState()
 
-    // 🆕 CORRECCIÓN: Manejar el resultado del login CON TOAST
+    // 🆕 MODIFICACIÓN CRÍTICA: Manejar el resultado del login CON DEBUG DETALLADO
     LaunchedEffect(loginState) {
         when (loginState) {
             is AuthViewModel.LoginState.Success -> {
-                // 🆕 Login exitoso - navegar a pantalla CLIENTES
-                navController.navigate(Screen.Cliente.route) {  // 🆕 CAMBIADO A Screen.Cliente.route
-                    popUpTo(Screen.Login.route) { inclusive = true }
+                val usuario = (loginState as AuthViewModel.LoginState.Success).usuario
+
+                // 🆕 DEBUG DETALLADO: Verificar todos los datos del usuario
+                println("🔍 [DEBUG LOGIN] ====================================")
+                println("🔍 [DEBUG LOGIN] USUARIO LOGUEADO - VERIFICACIÓN COMPLETA:")
+                println("🔍 [DEBUG LOGIN] 👤 RUT: '${usuario.rut}'")
+                println("🔍 [DEBUG LOGIN] 📛 Nombre: '${usuario.nombre} ${usuario.apellido}'")
+                println("🔍 [DEBUG LOGIN] 📧 Email: '${usuario.correo}'")
+                println("🔍 [DEBUG LOGIN] 🎯 Rol: '${usuario.rol}'")
+                println("🔍 [DEBUG LOGIN] 📏 Longitud del rol: ${usuario.rol.length}")
+                println("🔍 [DEBUG LOGIN] 🔍 Rol en minúsculas: '${usuario.rol.toLowerCase()}'")
+                println("🔍 [DEBUG LOGIN] 🔍 Rol trim: '${usuario.rol.trim()}'")
+                println("🔍 [DEBUG LOGIN] ✅ Activo: ${usuario.activo}")
+                println("🔍 [DEBUG LOGIN] 🏠 Dirección: '${usuario.direccion}'")
+                println("🔍 [DEBUG LOGIN] ====================================")
+
+                // 🆕 NAVEGACIÓN SEGÚN ROL CON VALIDACIÓN ROBUSTA
+                val rolNormalizado = usuario.rol.toLowerCase().trim()
+
+                when (rolNormalizado) {
+                    "admin" -> {
+                        println("✅ [LOGIN] ✅✅✅ USUARIO ADMIN DETECTADO - NAVEGANDO A ADMIN")
+                        navController.navigate(Screen.Admin.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    }
+                    "empleado" -> {
+                        println("✅ [LOGIN] Usuario EMPLEADO detectado - Navegando a Cliente (temporal)")
+                        navController.navigate(Screen.Cliente.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    }
+                    else -> {
+                        println("ℹ️ [LOGIN] Usuario con rol '$rolNormalizado' - Navegando a Cliente por defecto")
+                        navController.navigate(Screen.Cliente.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    }
                 }
             }
             is AuthViewModel.LoginState.Error -> {
                 // 🆕 Mostrar mensaje específico de error CON TOAST
                 val errorMessage = (loginState as AuthViewModel.LoginState.Error).message
+                println("❌ [LOGIN ERROR] $errorMessage")
                 Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
                 authViewModel.clearLoginState()
             }
-            else -> {}
+            is AuthViewModel.LoginState.Loading -> {
+                println("🔄 [LOGIN] Cargando...")
+            }
+            else -> {
+                println("⚪ [LOGIN] Estado idle o desconocido")
+            }
         }
     }
 
@@ -89,12 +130,13 @@ fun LoginScreen(
     }
 }
 
+// 🆕 EL RESTO DEL CÓDIGO (LoginContent) PERMANECE IGUAL
 @Composable
 fun LoginContent(
     navController: NavHostController,
     viewModel: LoginViewModel,
     authViewModel: AuthViewModel,
-    context: android.content.Context // 🆕 AGREGADO: Context para Toast
+    context: android.content.Context
 ) {
 
     val email by viewModel.email.collectAsState()
@@ -195,6 +237,7 @@ fun LoginContent(
                     if (email.isEmpty() || password.isEmpty()) {
                         Toast.makeText(context, "Complete todos los campos", Toast.LENGTH_LONG).show()
                     } else {
+                        println("🟡 [LOGIN] Intentando login con: $email")
                         authViewModel.login(email, password)
                     }
                 },
