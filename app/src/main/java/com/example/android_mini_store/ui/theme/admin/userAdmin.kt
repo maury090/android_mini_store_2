@@ -140,14 +140,12 @@ fun UserAdminScreen(
                     )
                 }
 
-                // 🆕 BOTÓN 4: CERRAR SESIÓN - AHORA CON FUNCIONALIDAD COMPLETA
+
                 Button(
                     onClick = {
-                        // 🆕 CERRAR SESIÓN Y VOLVER AL LOGIN
-                        println("🚪 [ADMIN] Cerrando sesión de admin")
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo(Screen.Admin.route) { inclusive = true }
-                        }
+                        println("🚪 [ADMIN] Cerrando sesión...")
+                        // Navegación simple y directa al Main
+                        navController.navigate(Screen.Main.route)
                     },
                     modifier = Modifier
                         .fillMaxWidth(0.8f),

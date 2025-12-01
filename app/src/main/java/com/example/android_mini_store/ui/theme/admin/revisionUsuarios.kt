@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -25,10 +25,9 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -56,7 +55,7 @@ import com.example.android_mini_store.data.repository.usuarioRepository
 fun RevisionUsuariosScreen(
     navController: NavHostController
 ) {
-    // 🆕 OBTENER VIEWMODEL
+    // OBTENER VIEWMODEL
     val adminViewModel: AdminViewModel = viewModel(
         factory = AdminViewModelFactory(
             usuarioRepository(
@@ -65,16 +64,16 @@ fun RevisionUsuariosScreen(
         )
     )
 
-    // 🆕 OBSERVAR ESTADOS
+    // OBSERVAR ESTADOS
     val usuarios by adminViewModel.usuariosState.collectAsState()
     val isLoading by adminViewModel.loadingState.collectAsState()
     val error by adminViewModel.errorState.collectAsState()
 
-    // 🆕 ESTADO PARA EL MENÚ DESPLEGABLE
+    // Estado para el menú desplegable
     var expanded by remember { mutableStateOf(false) }
     var selectedOption by remember { mutableStateOf("Cliente") }
 
-    // 🆕 CARGAR USUARIOS AL ENTRAR A LA PANTALLA
+    // Cargar usuarios al entrar a la pantalla
     LaunchedEffect(Unit) {
         adminViewModel.cargarUsuarios()
     }
@@ -83,11 +82,16 @@ fun RevisionUsuariosScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        "Usuarios Registrados",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "Usuarios Registrados",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
@@ -154,6 +158,14 @@ fun RevisionUsuariosScreen(
                             expanded = false
                         }
                     )
+                    DropdownMenuItem(
+                        text = { Text("Todos") },
+                        onClick = {
+                            selectedOption = "Todos"
+                            expanded = false
+                            adminViewModel.cargarUsuarios()
+                        }
+                    )
                 }
             }
 
@@ -215,9 +227,13 @@ fun RevisionUsuariosScreen(
                 }
             } else {
                 // ENCABEZADO DE LA TABLA
-                Surface(
-                    color = Color(0xFF4CAF50),
-                    modifier = Modifier.fillMaxWidth()
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    colors = androidx.compose.material3.CardDefaults.cardColors(
+                        containerColor = Color(0xFF4CAF50)
+                    )
                 ) {
                     Row(
                         modifier = Modifier
@@ -226,7 +242,7 @@ fun RevisionUsuariosScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Nombre Usuario",
+                            text = "Nombre",
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
@@ -247,7 +263,7 @@ fun RevisionUsuariosScreen(
                             modifier = Modifier.weight(2f)
                         )
                         Text(
-                            text = "Acción",
+                            text = "Info",
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
@@ -259,7 +275,11 @@ fun RevisionUsuariosScreen(
                 // LISTA DE USUARIOS EN FORMATO TABLA
                 LazyColumn {
                     items(usuarios) { usuario ->
-                        FilaUsuario(usuario = usuario)
+                        // ✅ CORREGIDO: Pasar navController como parámetro
+                        FilaUsuario(
+                            usuario = usuario,
+                            navController = navController
+                        )
                     }
                 }
             }
@@ -267,14 +287,18 @@ fun RevisionUsuariosScreen(
     }
 }
 
-
 @Composable
-fun FilaUsuario(usuario: com.example.android_mini_store.data.dataBase.UsuarioEntity) {
-    Surface(
-        color = Color.White,
+fun FilaUsuario(
+    usuario: com.example.android_mini_store.data.dataBase.UsuarioEntity,
+    navController: NavHostController // ✅ AGREGAR este parámetro
+) {
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = 4.dp),
+        colors = androidx.compose.material3.CardDefaults.cardColors(
+            containerColor = Color.White
+        )
     ) {
         Row(
             modifier = Modifier
@@ -283,7 +307,7 @@ fun FilaUsuario(usuario: com.example.android_mini_store.data.dataBase.UsuarioEnt
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // COLUMNA 1: NOMBRE USUARIO
+            // COLUMNA 1: NOMBRE
             Text(
                 text = "${usuario.nombre} ${usuario.apellido}",
                 color = Color.Black,
@@ -307,26 +331,19 @@ fun FilaUsuario(usuario: com.example.android_mini_store.data.dataBase.UsuarioEnt
                 modifier = Modifier.weight(2f)
             )
 
-            // COLUMNA 4: BOTÓN VER PERFIL
-            Button(
+            // COLUMNA 4: ENLACE "+" - ✅ AHORA CON navController DISPONIBLE
+            TextButton(
                 onClick = {
-                    // TODO: Implementar navegación al perfil del usuario
-                    println("👤 [ADMIN] Ver perfil de: ${usuario.nombre} ${usuario.apellido}")
+                    println("👤 [ADMIN] Navegando a información de: ${usuario.nombre} ${usuario.apellido}")
+                    navController.navigate("usuario_info") // ✅ FUNCIONA
                 },
-                modifier = Modifier.weight(1f),
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF2196F3),
-                    contentColor = Color.White
-                )
+                modifier = Modifier.weight(1f)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Visibility,
-                    contentDescription = "Ver perfil",
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(
-                    text = " Ver",
-                    fontSize = 12.sp
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Ver información",
+                    tint = Color(0xFF2196F3),
+                    modifier = Modifier.size(28.dp)
                 )
             }
         }

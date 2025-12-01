@@ -86,6 +86,7 @@ import android.app.Activity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.example.android_mini_store.ui.theme.admin.UsuarioInfoScreen
 
 
 
@@ -205,11 +206,13 @@ fun AppNavigation(
             )
         }
         composable(Screen.Admin.route) {
-            UserAdminScreen(navController)
+            UserAdminScreen(
+                navController)
         }
         composable("revision_usuarios") {
             RevisionUsuariosScreen(navController = navController)
         }
+
     }
 }
 
