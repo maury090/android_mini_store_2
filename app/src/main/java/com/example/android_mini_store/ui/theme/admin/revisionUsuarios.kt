@@ -1,22 +1,23 @@
 package com.example.android_mini_store.ui.theme.admin
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -27,9 +28,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -48,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.android_mini_store.data.dataBase.AppDatabase
+import com.example.android_mini_store.data.dataBase.UsuarioEntity
 import com.example.android_mini_store.data.repository.usuarioRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,7 +57,7 @@ import com.example.android_mini_store.data.repository.usuarioRepository
 fun RevisionUsuariosScreen(
     navController: NavHostController
 ) {
-    // OBTENER VIEWMODEL
+    // 1. OBTENER VIEWMODEL
     val adminViewModel: AdminViewModel = viewModel(
         factory = AdminViewModelFactory(
             usuarioRepository(
@@ -64,45 +66,35 @@ fun RevisionUsuariosScreen(
         )
     )
 
-    // OBSERVAR ESTADOS
+    // 2. OBSERVAR ESTADOS
     val usuarios by adminViewModel.usuariosState.collectAsState()
     val isLoading by adminViewModel.loadingState.collectAsState()
     val error by adminViewModel.errorState.collectAsState()
 
-    // Estado para el menú desplegable
+    // 3. ESTADOS DEL MENÚ DESPLEGABLE
     var expanded by remember { mutableStateOf(false) }
     var selectedOption by remember { mutableStateOf("Cliente") }
 
-    // Cargar usuarios al entrar a la pantalla
-    LaunchedEffect(Unit) {
-        adminViewModel.cargarUsuarios()
+    // 🚨 CORRECCIÓN: Llamadas a través de adminViewModel
+    LaunchedEffect(selectedOption) {
+        if (selectedOption == "Cliente") {
+            adminViewModel.cargarUsuariosClientes() // ✅ CORREGIDO
+        } else if (selectedOption == "Todos") {
+            adminViewModel.cargarUsuarios() // ✅ CORREGIDO
+        }
     }
+
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "Usuarios Registrados",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                },
+                title = { Text("Usuarios Registrados", color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = Color.White
-                        )
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
                     }
                 },
-                colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFF4CAF50)
                 )
             )
@@ -115,7 +107,8 @@ fun RevisionUsuariosScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            // MENÚ DESPLEGABLE
+
+            // FILTRO (Menú desplegable)
             Text(
                 text = "Usuario a visualizar:",
                 color = Color.Black,
@@ -132,55 +125,25 @@ fun RevisionUsuariosScreen(
                     value = selectedOption,
                     onValueChange = {},
                     readOnly = true,
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                    },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .menuAnchor()
                 )
 
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Cliente") },
-                        onClick = {
-                            selectedOption = "Cliente"
-                            expanded = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Operario Tienda") },
-                        onClick = {
-                            selectedOption = "Operario Tienda"
-                            expanded = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Todos") },
-                        onClick = {
-                            selectedOption = "Todos"
-                            expanded = false
-                            adminViewModel.cargarUsuarios()
-                        }
-                    )
+                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    DropdownMenuItem(text = { Text("Cliente") }, onClick = { selectedOption = "Cliente"; expanded = false })
+                    DropdownMenuItem(text = { Text("Operario Tienda") }, onClick = { selectedOption = "Operario Tienda"; expanded = false })
+                    DropdownMenuItem(text = { Text("Todos") }, onClick = { selectedOption = "Todos"; expanded = false })
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ESTADO DE CARGA
+            // ESTADOS DE CARGA Y ERROR
             if (isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         CircularProgressIndicator(color = Color(0xFF4CAF50))
                         Text("Cargando usuarios...", color = Color.Black)
                     }
@@ -188,95 +151,35 @@ fun RevisionUsuariosScreen(
                 return@Column
             }
 
-            // ESTADO DE ERROR
             if (error != null) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Text(
-                            text = "Error: $error",
-                            color = Color.Red,
-                            textAlign = TextAlign.Center
-                        )
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Text(text = "Error: $error", color = Color.Red, textAlign = TextAlign.Center)
                         Button(
-                            onClick = { adminViewModel.cargarUsuarios() }
-                        ) {
-                            Text("Reintentar")
-                        }
+                            onClick = {
+                                // 🚨 CORRECCIÓN DE LA LLAMADA EN BOTÓN
+                                if (selectedOption == "Cliente") adminViewModel.cargarUsuariosClientes()
+                                else adminViewModel.cargarUsuarios()
+                            }
+                        ) { Text("Reintentar") }
                     }
                 }
                 return@Column
             }
 
-            // TABLA DE USUARIOS
+            // LISTA DE CARDS DE USUARIOS (Reemplazo de la tabla)
             if (usuarios.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "No hay usuarios registrados",
-                        color = Color.Gray,
-                        fontSize = 18.sp
-                    )
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(text = "No hay usuarios registrados", color = Color.Gray, fontSize = 18.sp)
                 }
             } else {
-                // ENCABEZADO DE LA TABLA
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    colors = androidx.compose.material3.CardDefaults.cardColors(
-                        containerColor = Color(0xFF4CAF50)
-                    )
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Nombre",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            modifier = Modifier.weight(2f)
-                        )
-                        Text(
-                            text = "RUT",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            modifier = Modifier.weight(1.5f)
-                        )
-                        Text(
-                            text = "E-mail",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            modifier = Modifier.weight(2f)
-                        )
-                        Text(
-                            text = "Info",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-
-                // LISTA DE USUARIOS EN FORMATO TABLA
-                LazyColumn {
                     items(usuarios) { usuario ->
-                        // ✅ CORREGIDO: Pasar navController como parámetro
-                        FilaUsuario(
+                        UsuarioCard(
                             usuario = usuario,
                             navController = navController
                         )
@@ -287,32 +190,41 @@ fun RevisionUsuariosScreen(
     }
 }
 
+// ----------------------------------------------------
+// COMPONENTE CARD: SÓLO NOMBRE Y RUT
+// ----------------------------------------------------
 @Composable
-fun FilaUsuario(
-    usuario: com.example.android_mini_store.data.dataBase.UsuarioEntity,
-    navController: NavHostController // ✅ AGREGAR este parámetro
+fun UsuarioCard(
+    usuario: UsuarioEntity,
+    navController: NavHostController
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        colors = androidx.compose.material3.CardDefaults.cardColors(
+            .clickable {
+                println("👤 [ADMIN] Click en ${usuario.nombre} - Navegando a detalle")
+                // Navegación a la futura vista de detalle
+                navController.navigate("usuario_info/${usuario.rut}")
+            },
+        colors = CardDefaults.cardColors(
             containerColor = Color.White
-        )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // COLUMNA 1: NOMBRE
+            // COLUMNA 1: NOMBRE COMPLETO
             Text(
                 text = "${usuario.nombre} ${usuario.apellido}",
                 color = Color.Black,
-                fontSize = 14.sp,
-                modifier = Modifier.weight(2f)
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                modifier = Modifier.weight(1f)
             )
 
             // COLUMNA 2: RUT
@@ -320,32 +232,8 @@ fun FilaUsuario(
                 text = usuario.rut ?: "Sin RUT",
                 color = Color.DarkGray,
                 fontSize = 14.sp,
-                modifier = Modifier.weight(1.5f)
+                textAlign = TextAlign.End
             )
-
-            // COLUMNA 3: E-MAIL
-            Text(
-                text = usuario.correo,
-                color = Color.DarkGray,
-                fontSize = 14.sp,
-                modifier = Modifier.weight(2f)
-            )
-
-            // COLUMNA 4: ENLACE "+" - ✅ AHORA CON navController DISPONIBLE
-            TextButton(
-                onClick = {
-                    println("👤 [ADMIN] Navegando a información de: ${usuario.nombre} ${usuario.apellido}")
-                    navController.navigate("usuario_info") // ✅ FUNCIONA
-                },
-                modifier = Modifier.weight(1f)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Ver información",
-                    tint = Color(0xFF2196F3),
-                    modifier = Modifier.size(28.dp)
-                )
-            }
         }
     }
 }
