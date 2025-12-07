@@ -10,10 +10,9 @@ data class UsuarioEntity(
     val nombre: String,
     val apellido: String,
     val correo: String,
-    val direccion: String,
     val password: String,
-    val rol: String = "cliente", // "cliente", "empleado", "admin"
-    val fechaRegistro: Long = System.currentTimeMillis(),
-    val activo: Boolean = true
+    val direccion: String,
+    val rol: String, // "admin", "cliente", "operario"
+    val activo: Boolean = true,
+    val fechaRegistro: Long = System.currentTimeMillis()
 )
-

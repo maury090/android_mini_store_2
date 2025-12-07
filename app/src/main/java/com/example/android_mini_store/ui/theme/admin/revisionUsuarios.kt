@@ -55,7 +55,8 @@ import com.example.android_mini_store.data.repository.usuarioRepository
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RevisionUsuariosScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    adminViewModel: AdminViewModel
 ) {
     // 1. OBTENER VIEWMODEL
     val adminViewModel: AdminViewModel = viewModel(

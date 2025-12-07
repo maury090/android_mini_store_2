@@ -49,6 +49,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+// 🆕 Imports necesarios para argumentos de navegación
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+
 
 // Pantallas existentes
 import com.example.android_mini_store.ui.theme.login.LoginScreen
@@ -60,6 +64,11 @@ import com.example.android_mini_store.config.TextoConfig
 import com.example.android_mini_store.ui.theme.clientes.ClientesScreen
 import com.example.android_mini_store.ui.theme.admin.UserAdminScreen
 import com.example.android_mini_store.ui.theme.admin.RevisionUsuariosScreen
+// 🆕 Import de la nueva pantalla y ViewModel
+import com.example.android_mini_store.ui.theme.admin.UsuarioInfoScreen
+import com.example.android_mini_store.ui.theme.admin.AdminViewModel
+import com.example.android_mini_store.ui.theme.admin.AdminViewModelFactory
+
 
 // DataStore
 import com.example.android_mini_store.data.PreferencesManager
@@ -82,12 +91,10 @@ import kotlinx.coroutines.delay
 import androidx.compose.material3.AlertDialog
 import android.app.Activity
 
-// 🆕 IMPORT PARA CREAR USUARIO ADMIN
+// IMPORT PARA CREAR USUARIO ADMIN
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-//import com.example.android_mini_store.ui.theme.admin.UsuarioInfoScreen
-
 
 
 // Rutas
@@ -103,6 +110,11 @@ sealed class Screen(val route: String) {
     object Cliente : Screen("cliente")
     object Admin : Screen("admin")
     object RevisionUsuarios : Screen("revision_usuarios")
+
+    // ✅ CAMBIO 1: Nueva ruta con argumento {rut}
+    object UsuarioInfo : Screen("usuario_info/{rut}") {
+        fun createRoute(rut: String) = "usuario_info/$rut"
+    }
 }
 
 class MainActivity : ComponentActivity() {
@@ -162,6 +174,16 @@ fun AppNavigation(
     authViewModel: AuthViewModel
 ) {
     val navController = rememberNavController()
+    val context = LocalContext.current // Se necesita el contexto para el AdminViewModelFactory
+
+    // ✅ CAMBIO 2: Factory definido para ser reutilizado en AdminViewModel
+    val adminViewModelFactory = remember {
+        AdminViewModelFactory(
+            usuarioRepository(
+                AppDatabase.getDatabase(context).usuarioDao()
+            )
+        )
+    }
 
     NavHost(
         navController = navController,
@@ -209,16 +231,50 @@ fun AppNavigation(
             UserAdminScreen(
                 navController)
         }
-        composable("revision_usuarios") {
-            RevisionUsuariosScreen(navController = navController)
+
+        // ✅ CAMBIO 3: RevisionUsuariosScreen ahora usa el ViewModel inyectado
+        composable(Screen.RevisionUsuarios.route) {
+            val adminViewModel: AdminViewModel = viewModel(factory = adminViewModelFactory)
+            RevisionUsuariosScreen(
+                navController = navController,
+                adminViewModel = adminViewModel
+            )
         }
 
+        // ✅ CAMBIO 4: Nueva ruta para UsuarioInfoScreen
+        composable(
+            route = Screen.UsuarioInfo.route,
+            arguments = listOf(navArgument("rut") { type = NavType.StringType })
+        ) { backStackEntry ->
+
+            // 4.1. Extrae el argumento 'rut'
+            val rut = backStackEntry.arguments?.getString("rut")
+
+            // 4.2. Obtiene el AdminViewModel (reutilizando el factory)
+            val adminViewModel: AdminViewModel = viewModel(factory = adminViewModelFactory)
+
+            if (rut != null) {
+                UsuarioInfoScreen( // La nueva pantalla del punto 3
+                    navController = navController,
+                    adminViewModel = adminViewModel,
+                    rutUsuario = rut // Pasamos el RUT como argumento clave
+                )
+            } else {
+                Text(
+                    "Error: RUT de usuario no encontrado.",
+                    color = Color.Red,
+                    modifier = Modifier.padding(32.dp)
+                )
+            }
+        }
     }
 }
 
-// ✅ CÓDIGO MANTENIDO (MainScreenWithWelcome)
+// ... (Resto del código de MainScreenWithWelcome, ButtonsVertical y LoadingScreen se mantiene igual)
+
 @Composable
 fun MainScreenWithWelcome(navController: NavHostController) {
+    // ... (código mantenido)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -278,6 +334,7 @@ fun MainScreenWithWelcome(navController: NavHostController) {
                         modifier = Modifier.fillMaxWidth()
                     )
 
+                    // Asegúrate de tener R.drawable.ekono2 disponible
                     Image(
                         painter = painterResource(id = R.drawable.ekono2),
                         contentDescription = "logo ekono",
@@ -291,7 +348,6 @@ fun MainScreenWithWelcome(navController: NavHostController) {
     }
 }
 
-// ✅ CÓDIGO MANTENIDO (ButtonsVertical)
 @Composable
 fun ButtonsVertical(navController: NavHostController) {
 
@@ -418,7 +474,6 @@ fun ButtonsVertical(navController: NavHostController) {
     }
 }
 
-// ✅ CÓDIGO MANTENIDO (LoadingScreen)
 @Composable
 fun LoadingScreen(navController: NavHostController) {
     LaunchedEffect(Unit) {
