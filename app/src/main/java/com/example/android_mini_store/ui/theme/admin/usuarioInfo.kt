@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,48 +18,43 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.example.android_mini_store.config.TextoConfig
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import android.widget.Toast
 import androidx.compose.foundation.background
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UsuarioInfoScreen(
     navController: NavHostController,
     adminViewModel: AdminViewModel,
-    rutUsuario: String // RUT pasado desde MainActivity
+    rutUsuario: String
 ) {
-    // 1. Estados Observables del ViewModel
+    // Estados
     val usuarioDetalle by adminViewModel.usuarioDetalleState.collectAsState()
     val loadingState by adminViewModel.loadingState.collectAsState()
     val errorState by adminViewModel.errorState.collectAsState()
     val updateSuccess by adminViewModel.updateSuccessState.collectAsState()
+    val eliminacionExitosa by adminViewModel.eliminacionExitosa.collectAsState()
 
-    // 2. Estado local para el campo editable (Dirección)
     var nuevaDireccion by remember { mutableStateOf("") }
-
-    // 3. Contexto para Toast
+    var mostrarDialogoEliminar by remember { mutableStateOf(false) }
     val context = LocalContext.current
-
-    // 4. Estado para mostrar Toast de campo vacío
     var showEmptyFieldToast by remember { mutableStateOf(false) }
 
-    // 5. Efecto: Carga los datos del usuario al iniciar la pantalla
+    // Efectos
     LaunchedEffect(rutUsuario) {
         adminViewModel.fetchUsuarioDetalle(rutUsuario)
     }
 
-    // 6. Efecto: Sincroniza el campo editable con la dirección cargada (o actualizada)
     LaunchedEffect(usuarioDetalle) {
         usuarioDetalle?.direccion?.let {
             nuevaDireccion = it
         }
     }
 
-    // 7. Efecto: Mostrar Toast cuando se actualiza la dirección exitosamente
     LaunchedEffect(updateSuccess) {
         if (updateSuccess) {
             Toast.makeText(context, "✅ Información actualizada correctamente", Toast.LENGTH_SHORT).show()
@@ -66,19 +62,27 @@ fun UsuarioInfoScreen(
         }
     }
 
-    // 8. Efecto: Mostrar Toast cuando se intenta guardar campo vacío
+    LaunchedEffect(eliminacionExitosa) {
+        if (eliminacionExitosa) {
+            Toast.makeText(context, "🗑️ Usuario eliminado permanentemente", Toast.LENGTH_SHORT).show()
+            delay(500)
+            navController.popBackStack()
+            adminViewModel.resetEliminacionExitosa()
+        }
+    }
+
     LaunchedEffect(showEmptyFieldToast) {
         if (showEmptyFieldToast) {
             Toast.makeText(context, "⚠️ La dirección no puede estar vacía", Toast.LENGTH_SHORT).show()
-            // Resetear después de mostrar
             showEmptyFieldToast = false
         }
     }
 
-    // Colores de la aplicación
-    val backgroundColor = Color(0xFFFFD700) // Amarillo (#FFD700)
-    val accentColor = Color(0xFF4CAF50)     // Verde para acentos
-    val cardBackground = Color.White        // Fondo blanco para las tarjetas
+    // Colores
+    val backgroundColor = Color(0xFFFFD700)
+    val accentColor = Color(0xFF4CAF50)
+    val cardBackground = Color.White
+    val deleteColor = Color(0xFFF44336)
 
     Scaffold(
         topBar = {
@@ -135,11 +139,11 @@ fun UsuarioInfoScreen(
                     Text("Usuario no encontrado.", color = Color.Black)
                 }
 
-                // Vista principal (se muestra solo si hay datos)
+                // Vista principal
                 usuarioDetalle?.let { usuario ->
                     Spacer(Modifier.height(24.dp))
 
-                    // --- TABLA DE INFORMACIÓN NO EDITABLE ---
+                    // --- TABLA DE INFORMACIÓN ---
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
@@ -179,7 +183,7 @@ fun UsuarioInfoScreen(
                     ) {
                         Column(Modifier.padding(20.dp)) {
                             Text(
-                                "Dirección", // (opcional) eliminado
+                                "Dirección",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = accentColor,
@@ -213,7 +217,6 @@ fun UsuarioInfoScreen(
                                 shape = MaterialTheme.shapes.medium
                             )
 
-                            // Nota modificada
                             Text(
                                 "Para mantener información no cambies lo de este campo",
                                 color = Color.Gray,
@@ -226,12 +229,11 @@ fun UsuarioInfoScreen(
 
                     Spacer(Modifier.height(24.dp))
 
-                    // --- BOTÓN DE ACTUALIZACIÓN ---
+                    // --- BOTÓN DE ACTUALIZACIÓN (VERDE) ---
                     val hayCambios = nuevaDireccion.isNotEmpty() && nuevaDireccion != usuario.direccion
 
                     Button(
                         onClick = {
-                            // Solo guardar si hay cambios y contenido
                             adminViewModel.actualizarDireccionUsuario(
                                 rut = usuario.rut,
                                 nuevaDireccion = nuevaDireccion
@@ -246,7 +248,6 @@ fun UsuarioInfoScreen(
                             disabledContainerColor = accentColor.copy(alpha = 0.5f),
                             disabledContentColor = Color.White.copy(alpha = 0.7f)
                         ),
-
                         enabled = !loadingState && hayCambios,
                         shape = MaterialTheme.shapes.large,
                         elevation = ButtonDefaults.buttonElevation(
@@ -314,13 +315,147 @@ fun UsuarioInfoScreen(
                     }
 
                     Spacer(Modifier.height(32.dp))
+
+                    // --- BOTÓN DE ELIMINACIÓN (ROJO) ---
+                    Button(
+                        onClick = {
+                            mostrarDialogoEliminar = true
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth(0.9f)
+                            .height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = deleteColor,
+                            contentColor = Color.White,
+                            disabledContainerColor = deleteColor.copy(alpha = 0.5f),
+                            disabledContentColor = Color.White.copy(alpha = 0.7f)
+                        ),
+                        enabled = !loadingState,
+                        shape = MaterialTheme.shapes.large,
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 8.dp,
+                            pressedElevation = 4.dp,
+                            disabledElevation = 0.dp
+                        )
+                    ) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Eliminar",
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Text(
+                            "Eliminar Usuario",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+                    // 🔧 **ELIMINADO: El mensaje redundante bajo el botón**
+                    // Se eliminaron estas líneas (~líneas 285-295):
+                    /*
+                    Spacer(Modifier.height(16.dp))
+
+                    Text(
+                        "⚠️ Esta acción no se puede deshacer",
+                        color = Color.Gray,
+                        fontSize = 12.sp,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    )
+                    */
+
+                    Spacer(Modifier.height(32.dp))
                 }
             }
         }
     }
+
+    // --- ALERTDIALOG DE CONFIRMACIÓN ---
+    if (mostrarDialogoEliminar && usuarioDetalle != null) {
+        AlertDialog(
+            onDismissRequest = {
+                mostrarDialogoEliminar = false
+            },
+            title = {
+                Text(
+                    "ELIMINAR USUARIO",
+                    fontWeight = FontWeight.Bold,
+                    color = deleteColor,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+            },
+            text = {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        "¿Estás seguro de eliminar al usuario ${usuarioDetalle!!.rut}?",
+                        color = Color.Black,
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Esta acción no se puede deshacer.",
+                        color = Color.Gray,
+                        fontSize = 14.sp,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            },
+            confirmButton = {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Botón "NO"
+                    Button(
+                        onClick = {
+                            mostrarDialogoEliminar = false
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Gray,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("NO", fontWeight = FontWeight.Medium)
+                    }
+
+                    // Botón "SÍ"
+                    Button(
+                        onClick = {
+                            mostrarDialogoEliminar = false
+                            adminViewModel.eliminarUsuario(usuarioDetalle!!.rut)
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = deleteColor,
+                            contentColor = Color.White
+                        ),
+                        enabled = !loadingState
+                    ) {
+                        Text("SÍ", fontWeight = FontWeight.Bold)
+                    }
+                }
+            },
+            dismissButton = null
+        )
+    }
 }
 
-// Componente para mostrar una fila de información no editable
+// Componente para mostrar una fila de información
 @Composable
 fun InfoRow(label: String, value: String) {
     Row(

@@ -14,5 +14,6 @@ data class UsuarioEntity(
     val direccion: String,
     val rol: String, // "admin", "cliente", "operario"
     val activo: Boolean = true,
+    val numeroOperario: String? = null, //solo para operadores tienda
     val fechaRegistro: Long = System.currentTimeMillis()
 )

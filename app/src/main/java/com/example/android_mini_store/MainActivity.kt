@@ -69,7 +69,6 @@ import com.example.android_mini_store.ui.theme.admin.UsuarioInfoScreen
 import com.example.android_mini_store.ui.theme.admin.AdminViewModel
 import com.example.android_mini_store.ui.theme.admin.AdminViewModelFactory
 
-
 // DataStore
 import com.example.android_mini_store.data.PreferencesManager
 
@@ -174,9 +173,8 @@ fun AppNavigation(
     authViewModel: AuthViewModel
 ) {
     val navController = rememberNavController()
-    val context = LocalContext.current // Se necesita el contexto para el AdminViewModelFactory
+    val context = LocalContext.current
 
-    // ✅ CAMBIO 2: Factory definido para ser reutilizado en AdminViewModel
     val adminViewModelFactory = remember {
         AdminViewModelFactory(
             usuarioRepository(
@@ -232,7 +230,7 @@ fun AppNavigation(
                 navController)
         }
 
-        // ✅ CAMBIO 3: RevisionUsuariosScreen ahora usa el ViewModel inyectado
+        //  RevisionUsuariosScreen ahora usa el ViewModel
         composable(Screen.RevisionUsuarios.route) {
             val adminViewModel: AdminViewModel = viewModel(factory = adminViewModelFactory)
             RevisionUsuariosScreen(
@@ -241,23 +239,23 @@ fun AppNavigation(
             )
         }
 
-        // ✅ CAMBIO 4: Nueva ruta para UsuarioInfoScreen
+        // ruta para UsuarioInfoScreen
         composable(
             route = Screen.UsuarioInfo.route,
             arguments = listOf(navArgument("rut") { type = NavType.StringType })
         ) { backStackEntry ->
 
-            // 4.1. Extrae el argumento 'rut'
+            //  Extrae el argumento 'rut'
             val rut = backStackEntry.arguments?.getString("rut")
 
-            // 4.2. Obtiene el AdminViewModel (reutilizando el factory)
+            //  Obtiene el AdminViewModel a través del factory
             val adminViewModel: AdminViewModel = viewModel(factory = adminViewModelFactory)
 
             if (rut != null) {
-                UsuarioInfoScreen( // La nueva pantalla del punto 3
+                UsuarioInfoScreen(
                     navController = navController,
                     adminViewModel = adminViewModel,
-                    rutUsuario = rut // Pasamos el RUT como argumento clave
+                    rutUsuario = rut
                 )
             } else {
                 Text(
@@ -270,11 +268,9 @@ fun AppNavigation(
     }
 }
 
-// ... (Resto del código de MainScreenWithWelcome, ButtonsVertical y LoadingScreen se mantiene igual)
-
 @Composable
 fun MainScreenWithWelcome(navController: NavHostController) {
-    // ... (código mantenido)
+
     Column(
         modifier = Modifier
             .fillMaxSize()

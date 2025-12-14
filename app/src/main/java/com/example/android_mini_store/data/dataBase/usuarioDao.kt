@@ -14,7 +14,7 @@ interface UsuarioDao {
     @Insert
     suspend fun registrarUsuario(usuario: UsuarioEntity)
 
-    // 🆕 CREAR USUARIO ADMIN
+    // CREAR USUARIO ADMIN
     @Insert
     suspend fun crearUsuarioAdmin(usuario: UsuarioEntity)
 
@@ -26,7 +26,11 @@ interface UsuarioDao {
     @Query("SELECT COUNT(*) FROM usuarios WHERE correo = :correo")
     suspend fun correoExiste(correo: String): Int
 
-    // 🆕 VERIFICAR SI USUARIO ADMIN EXISTE
+    // 🆕 VERIFICAR SI YA EXISTE OPERARIO CON MISMO NOMBRE Y APELLIDO
+    @Query("SELECT COUNT(*) FROM usuarios WHERE nombre = :nombre AND apellido = :apellido AND rol = 'operario'")
+    suspend fun existeNombreCompletoOperario(nombre: String, apellido: String): Int
+
+    // VERIFICAR SI USUARIO ADMIN EXISTE
     @Query("SELECT COUNT(*) FROM usuarios WHERE rut = '88888888-8'")
     suspend fun existeUsuarioAdmin(): Int
 
@@ -42,11 +46,15 @@ interface UsuarioDao {
     @Update
     suspend fun actualizarUsuario(usuario: UsuarioEntity): Int
 
+    // 🗑️ ELIMINAR USUARIO FÍSICAMENTE (Ya existente)
+    @Query("DELETE FROM usuarios WHERE rut = :rut")
+    suspend fun eliminarUsuario(rut: String): Int
+
     // Obtener todos los usuarios activos
     @Query("SELECT * FROM usuarios WHERE activo = 1")
     fun getAllUsuarios(): Flow<List<UsuarioEntity>>
 
-    // 🆕 FUNCIÓN PARA CREAR ADMIN INICIAL
+    // FUNCIÓN PARA CREAR ADMIN INICIAL
     suspend fun crearUsuarioAdminInicial() {
         try {
             if (existeUsuarioAdmin() == 0) {

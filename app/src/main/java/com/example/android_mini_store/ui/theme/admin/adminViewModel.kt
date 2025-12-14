@@ -23,8 +23,7 @@ class AdminViewModel(
     private val _errorState = MutableStateFlow<String?>(null)
     val errorState: StateFlow<String?> = _errorState.asStateFlow()
 
-    // 2. NUEVO ESTADO DE DETALLE (Usado en UsuarioInfoScreen)
-    // Contiene un solo usuario o null si no se ha cargado
+    // 2. ESTADO DE DETALLE (Usado en UsuarioInfoScreen)
     private val _usuarioDetalleState = MutableStateFlow<UsuarioEntity?>(null)
     val usuarioDetalleState: StateFlow<UsuarioEntity?> = _usuarioDetalleState.asStateFlow()
 
@@ -32,11 +31,14 @@ class AdminViewModel(
     private val _updateSuccessState = MutableStateFlow<Boolean>(false)
     val updateSuccessState: StateFlow<Boolean> = _updateSuccessState.asStateFlow()
 
+    // 4. ESTADO PARA ELIMINACIÓN EXITOSA
+    private val _eliminacionExitosa = MutableStateFlow<Boolean>(false)
+    val eliminacionExitosa: StateFlow<Boolean> = _eliminacionExitosa.asStateFlow()
+
     // ---------------------------------------------------------------------
-    // FUNCIONES EXISTENTES (Carga de listas)
+    // FUNCIONES DE LISTAS (MANTENIDAS)
     // ---------------------------------------------------------------------
 
-    // Cargar SOLO usuarios clientes
     fun cargarUsuariosClientes() {
         _loadingState.value = true
         _errorState.value = null
@@ -44,7 +46,6 @@ class AdminViewModel(
         viewModelScope.launch {
             try {
                 usuarioRepository.getAllUsuarios().collect { todosUsuarios ->
-                    // Filtrar: Solo usuarios con rol "cliente"
                     val usuariosClientes = todosUsuarios.filter { usuario ->
                         usuario.rol.equals("cliente", ignoreCase = true)
                     }
@@ -58,7 +59,6 @@ class AdminViewModel(
         }
     }
 
-    // Cargar TODOS los usuarios
     fun cargarUsuarios() {
         _loadingState.value = true
         _errorState.value = null
@@ -66,7 +66,6 @@ class AdminViewModel(
         viewModelScope.launch {
             try {
                 usuarioRepository.getAllUsuarios().collect { todosUsuarios ->
-                    // No se aplica filtro, carga todos
                     _usuariosState.value = todosUsuarios
                     _loadingState.value = false
                 }
@@ -78,18 +77,14 @@ class AdminViewModel(
     }
 
     // ---------------------------------------------------------------------
-    // FUNCIONES NUEVAS (Detalle de UsuarioInfoScreen)
+    // FUNCIONES DE DETALLE (MANTENIDAS)
     // ---------------------------------------------------------------------
 
-    /**
-     * 🆕 FUNCIÓN 1: Carga el detalle de un usuario específico por su RUT.
-     */
     fun fetchUsuarioDetalle(rut: String) {
         viewModelScope.launch {
             _loadingState.value = true
             _errorState.value = null
             try {
-                // Llama al repositorio para obtener el usuario
                 val usuario = usuarioRepository.getUsuarioByRut(rut)
                 _usuarioDetalleState.value = usuario
                 _loadingState.value = false
@@ -101,28 +96,22 @@ class AdminViewModel(
         }
     }
 
-    /**
-     * 🆕 FUNCIÓN 2: Actualiza solo el campo de dirección del usuario.
-     * Ahora también establece el estado de éxito para mostrar el Toast
-     */
     fun actualizarDireccionUsuario(rut: String, nuevaDireccion: String) {
         viewModelScope.launch {
             _loadingState.value = true
             _errorState.value = null
-            _updateSuccessState.value = false // Resetear estado de éxito
+            _updateSuccessState.value = false
             try {
                 val usuarioActual = usuarioRepository.getUsuarioByRut(rut)
 
                 if (usuarioActual != null) {
-                    // Crea una copia del usuario SÓLO con la dirección modificada
                     val usuarioActualizado = usuarioActual.copy(direccion = nuevaDireccion)
-
                     val resultado = usuarioRepository.actualizarUsuario(usuarioActualizado)
 
                     if (resultado.isSuccess) {
-                        _usuarioDetalleState.value = usuarioActualizado // Actualizar el estado para refrescar la UI
+                        _usuarioDetalleState.value = usuarioActualizado
                         _loadingState.value = false
-                        _updateSuccessState.value = true // Establecer éxito para mostrar Toast
+                        _updateSuccessState.value = true
                         println("✅ [ADMIN-VM] Dirección de $rut actualizada a: $nuevaDireccion")
                     } else {
                         _errorState.value = "Error al actualizar la dirección: ${resultado.exceptionOrNull()?.message}"
@@ -139,16 +128,73 @@ class AdminViewModel(
         }
     }
 
-    /**
-     * 🆕 FUNCIÓN 3: Reinicia el estado de éxito después de mostrar el Toast
-     * Esto se llama desde la UI después de mostrar el Toast
-     */
     fun resetUpdateSuccess() {
         _updateSuccessState.value = false
     }
 
     // ---------------------------------------------------------------------
-    // OTRAS FUNCIONES MANTENIDAS (Para referencia)
+    // 🗑️ FUNCIONES DE ELIMINACIÓN (ELIMINACIÓN FÍSICA)
+    // ---------------------------------------------------------------------
+
+    /**
+     * ELIMINAR USUARIO PERMANENTEMENTE
+     * Borra completamente el usuario de la base de datos
+     *
+     * @param rut RUT del usuario a eliminar
+     */
+    fun eliminarUsuario(rut: String) {
+        // Validación: No permitir eliminar el usuario admin principal
+        if (rut == "88888888-8") {
+            _errorState.value = "No se puede eliminar el usuario administrador principal"
+            return
+        }
+
+        viewModelScope.launch {
+            _loadingState.value = true
+            _errorState.value = null
+            _eliminacionExitosa.value = false
+
+            try {
+                // 🗑️ Llamar al repositorio para ELIMINAR (no desactivar)
+                val resultado = usuarioRepository.eliminarUsuario(rut)
+
+                resultado.fold(
+                    onSuccess = { filasAfectadas ->
+                        if (filasAfectadas > 0) {
+                            // Éxito: Usuario ELIMINADO permanentemente
+                            _eliminacionExitosa.value = true
+                            _loadingState.value = false
+
+                            // Limpiar el detalle del usuario actual si es el mismo
+                            if (_usuarioDetalleState.value?.rut == rut) {
+                                _usuarioDetalleState.value = null
+                            }
+
+                            println("🗑️ [ADMIN-VM] Usuario $rut ELIMINADO permanentemente")
+                        } else {
+                            _errorState.value = "Usuario no encontrado"
+                            _loadingState.value = false
+                        }
+                    },
+                    onFailure = { error ->
+                        _errorState.value = "Error al eliminar usuario: ${error.message}"
+                        _loadingState.value = false
+                    }
+                )
+            } catch (e: Exception) {
+                _errorState.value = "Error inesperado: ${e.message}"
+                _loadingState.value = false
+            }
+        }
+    }
+
+
+    fun resetEliminacionExitosa() {
+        _eliminacionExitosa.value = false
+    }
+
+    // ---------------------------------------------------------------------
+    // OTRAS FUNCIONES (MANTENIDAS)
     // ---------------------------------------------------------------------
 
     fun clearError() {
@@ -159,9 +205,8 @@ class AdminViewModel(
         // ... (Tu lógica de actualización de rol)
     }
 
-    fun desactivarUsuario(rut: String) {
-        // ... (Tu lógica de desactivación)
-    }
+    // 🗑️ NOTA: El método desactivarUsuario() original se renombra o elimina
+    // Mantenemos solo eliminarUsuario() para eliminación física
 
     fun buscarUsuariosClientes(query: String) {
         // ... (Tu lógica de búsqueda)

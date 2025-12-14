@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [UsuarioEntity::class],
-    version = 2,  // 🆕 VERSIÓN 2
+    version = 3,  // 🆕 VERSIÓN 3
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

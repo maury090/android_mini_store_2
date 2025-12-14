@@ -6,7 +6,8 @@ import kotlinx.coroutines.flow.Flow
 
 class usuarioRepository(private val usuarioDao: UsuarioDao) {
 
-    // Métodos existentes
+
+
     suspend fun login(identificador: String, password: String): Result<UsuarioEntity> {
         return try {
             val usuario = usuarioDao.login(identificador, password)
@@ -74,12 +75,51 @@ class usuarioRepository(private val usuarioDao: UsuarioDao) {
         }
     }
 
+    // 🗑️ ELIMINAR USUARIO FÍSICAMENTE
+    suspend fun eliminarUsuario(rut: String): Result<Int> {
+        return try {
+            val filasAfectadas = usuarioDao.eliminarUsuario(rut)
+            if (filasAfectadas > 0) {
+                Result.success(filasAfectadas)
+            } else {
+                Result.failure(Exception("Usuario no encontrado"))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception("Error al eliminar usuario: ${e.message}"))
+        }
+    }
+
     fun getAllUsuarios(): Flow<List<UsuarioEntity>> {
         return usuarioDao.getAllUsuarios()
     }
 
-    // 🆕 MÉTODO PARA INICIALIZAR ADMIN
+    // MÉTODO PARA INICIALIZAR ADMIN
     suspend fun inicializarUsuarioAdmin() {
         usuarioDao.crearUsuarioAdminInicial()
     }
+    /**
+     * 🆕 NORMALIZAR TEXTO (quitar acentos, minúsculas, solo letras)
+     */
+    private fun normalizarTexto(texto: String): String {
+        return texto.lowercase()
+            .replace("á", "a").replace("é", "e").replace("í", "i")
+            .replace("ó", "o").replace("ú", "u").replace("ñ", "n")
+            .filter { it.isLetter() }
+    }
+
+    /**
+     * 🆕 TOMAR LETRAS (con relleno si es necesario)
+     * @param texto Texto original
+     * @param cantidad Cantidad de letras a tomar
+     * @return Texto con la cantidad especificada, rellenado con 'x' si es más corto
+     */
+    private fun tomarLetras(texto: String, cantidad: Int): String {
+        val letras = texto.take(cantidad)
+        return if (letras.length < cantidad) {
+            letras.padEnd(cantidad, 'x')
+        } else {
+            letras
+        }
+    }
+
 }
